@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: mock-supplier
+
+server:
+  port: 9090

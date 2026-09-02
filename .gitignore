@@ -1,0 +1,46 @@
+HELP.md
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
+.vscode/
+
+### 외부 원문 자료 — 커밋 금지 ###
+# 외부에서 받은 원문 자료는 저장소에 포함하지 않는다.
+# docs/ 디렉토리 자체는 산출물이므로 ignore 하지 않는다.
+# macOS 한글 파일명은 NFD/NFC 두 표현이 존재하므로 양쪽 모두 등록한다.
+LOCAL_ONLY_*
+docs/LOCAL_ONLY_*
+docs/문제원본.md
+docs/문제원본.md

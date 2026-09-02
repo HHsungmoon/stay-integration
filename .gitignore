@@ -44,3 +44,8 @@ LOCAL_ONLY_*
 docs/LOCAL_ONLY_*
 docs/문제원본.md
 docs/문제원본.md
+
+### 작성 중인 문서 ###
+# 내용이 아직 바뀌는 단계라 저장소에 올리지 않는다.
+# 확정되면 해당 줄을 지우고 커밋한다.
+docs/01-requirements-analysis.md

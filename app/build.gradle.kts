@@ -32,6 +32,12 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-validation-test")
 	testImplementation("org.springframework.boot:spring-boot-starter-webflux-test")
 	testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
+	// 테스트는 실제 PostgreSQL 컨테이너를 띄워 검증한다.
+	// 매핑의 upsert 멱등성·유니크 제약이 이 프로젝트의 불변 조건인데,
+	// 인메모리 DB로는 방언 차이 때문에 "테스트는 통과하는데 운영에서 깨지는" 상황이 생긴다.
+	testImplementation("org.springframework.boot:spring-boot-testcontainers")
+	testImplementation("org.testcontainers:testcontainers-junit-jupiter")
+	testImplementation("org.testcontainers:testcontainers-postgresql")
 	testCompileOnly("org.projectlombok:lombok")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 	testAnnotationProcessor("org.projectlombok:lombok")
@@ -39,4 +45,9 @@ dependencies {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+}
+
+// deprecation 경고를 파일명만 아니라 어느 API인지까지 보여준다.
+tasks.withType<JavaCompile> {
+	options.compilerArgs.add("-Xlint:deprecation")
 }

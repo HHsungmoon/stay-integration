@@ -29,12 +29,17 @@ import com.demo.stayintegration.catalog.entity.PropertyMapping;
 import com.demo.stayintegration.catalog.entity.RoomTypeMapping;
 import com.demo.stayintegration.catalog.repository.PropertyMappingRepository;
 import com.demo.stayintegration.catalog.repository.RoomTypeMappingRepository;
+import com.demo.stayintegration.catalog.dto.response.SyncReport;
+import com.demo.stayintegration.catalog.dto.response.SyncReport.SupplierSyncResult;
 import com.demo.stayintegration.catalog.service.CatalogSyncService;
 import com.demo.stayintegration.search.dto.request.SearchRequest;
 import com.demo.stayintegration.search.dto.response.SearchResponse;
 import com.demo.stayintegration.search.dto.response.StayItem;
 import com.demo.stayintegration.search.dto.response.SupplierOutcome;
 import com.demo.stayintegration.search.service.StaySearchService;
+import com.demo.stayintegration.supplier.adapter.support.SupplierCallPipelines;
+
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
@@ -55,6 +60,9 @@ class StaySearchWireTest {
 			// 무응답 케이스를 2초 기다리지 않기 위해. 데드라인(3s)보다는 짧아야 TIMEOUT이 어댑터에서 판정된다.
 			registry.add("supplier.endpoints." + supplier + ".response-timeout", () -> "700ms");
 		}
+		// 서킷을 두 번의 실패로 열고 300ms 뒤 회복을 본다. 운영값(10회 / 10s)이면 스무 번 호출하고 10초를 기다려야 한다 — 설정을 yaml로 뺀 이유의 절반.
+		registry.add("supplier.circuit.minimum-number-of-calls", () -> "2");
+		registry.add("supplier.circuit.wait-duration-in-open-state", () -> "300ms");
 	}
 
 	private static final LocalDate CHECK_IN = LocalDate.of(2026, 9, 1);
@@ -66,15 +74,26 @@ class StaySearchWireTest {
 	@Autowired PropertyMappingRepository propertyMappingRepository;
 	@Autowired RoomTypeMappingRepository roomTypeMappingRepository;
 	@Autowired MockMvc mvc;
+	@Autowired SupplierCallPipelines supplierCallPipelines;
 	private final JsonMapper json = new JsonMapper();
 
 	@BeforeEach
 	void syncCatalogFromHealthyMock() {
 		mock.reset();
+		resetCircuits();   // 서킷 상태는 컨텍스트(싱글턴)에 남는다 — 앞 테스트가 열어 둔 서킷이 동기화를 건너뛰게 하면 안 된다
 		roomTypeMappingRepository.deleteAll();
 		propertyMappingRepository.deleteAll();
 		catalogSyncService.sync();
 		assertThat(roomTypeMappingRepository.count()).isEqualTo(6);
+		resetCircuits();   // 동기화의 성공 호출이 창에 남으면 "실패 2회로 열림"이 흔들린다
+	}
+
+	private void resetCircuits() {
+		supplierCallPipelines.registry().getAllCircuitBreakers().forEach(CircuitBreaker::reset);
+	}
+
+	private CircuitBreaker circuitOf(String supplier) {
+		return supplierCallPipelines.registry().circuitBreaker(supplier);
 	}
 
 	@AfterEach
@@ -199,6 +218,65 @@ class StaySearchWireTest {
 		assertThat(b.offers()).isEqualTo(1);
 		assertThat(b.unmapped()).isEqualTo(1);   // 동기화가 밀렸다는 신호
 		assertThat(response.items()).hasSize(5);
+	}
+
+	// ── 서킷 브레이커 (07) ─────────────────────────────────────────────────
+
+	private void openCircuitOf(String supplier) {
+		mock.setMode(supplier, "availability", MockMode.ERROR);
+		for (int i = 0; i < 2; i++) {
+			assertThat(supplier(staySearchService.search(REQUEST).block(), supplier).status()).isEqualTo(SupplierOutcome.Status.FAILED);
+		}
+		assertThat(circuitOf(supplier).getState()).isEqualTo(CircuitBreaker.State.OPEN);
+	}
+
+	@Test
+	void openCircuitMakesSearchSkipThatSupplierWithoutCallingIt() {
+		openCircuitOf("b");
+		// 호출했다면 700ms를 기다려 TIMEOUT이 됐을 모드로 바꿔 둔다 — SKIPPED가 즉시 오는 것이 "호출하지 않았다"의 증명이다
+		mock.setMode("b", "availability", MockMode.NO_RESPONSE);
+
+		long started = System.nanoTime();
+		SearchResponse response = staySearchService.search(REQUEST).block();
+		Duration took = Duration.ofNanos(System.nanoTime() - started);
+
+		SupplierOutcome b = supplier(response, "b");
+		assertThat(b.status()).isEqualTo(SupplierOutcome.Status.SKIPPED);
+		assertThat(b.calls()).isZero();
+		assertThat(b.skippedCalls()).isEqualTo(1);
+		assertThat(b.failure().kind()).isEqualTo("SKIPPED");
+		assertThat(b.failure().detail()).isEqualTo("circuit open");
+		assertThat(took).isLessThan(Duration.ofMillis(500));
+		assertThat(response.status()).isEqualTo(SearchResponse.Status.OK);   // 보호 동작은 실패가 아니다(06 §3)
+		assertThat(response.items()).hasSize(4).allMatch(i -> i.supplier().equals("a"));
+		assertThat(response.cacheable()).isTrue();
+	}
+
+	@Test
+	void circuitRecoversThroughHalfOpenAfterTheWaitDuration() throws Exception {
+		openCircuitOf("b");
+		mock.reset();
+		Thread.sleep(350);   // wait-duration-in-open-state 300ms
+
+		assertThat(supplier(staySearchService.search(REQUEST).block(), "b").status()).isEqualTo(SupplierOutcome.Status.SUCCESS);
+		assertThat(circuitOf("b").getState()).isEqualTo(CircuitBreaker.State.HALF_OPEN);   // 첫 호출이 반열림으로 넘겼고 아직 판정 전
+		assertThat(supplier(staySearchService.search(REQUEST).block(), "b").status()).isEqualTo(SupplierOutcome.Status.SUCCESS);
+		assertThat(circuitOf("b").getState()).isEqualTo(CircuitBreaker.State.CLOSED);      // 반열림 최소 호출 수 = min(허용 3, 최소 2) = 2
+	}
+
+	@Test
+	void openCircuitMakesCatalogSyncSkipThatSupplierAndKeepsItsMappings() {
+		openCircuitOf("b");   // 검색 트래픽으로 열렸다 — 서킷은 공급사당 하나라 카탈로그 호출도 막힌다(07 §4)
+
+		SyncReport report = catalogSyncService.sync();
+
+		SupplierSyncResult b = report.suppliers().stream().filter(r -> r.supplier().equals("b")).findFirst().orElseThrow();
+		assertThat(b.status()).isEqualTo(SupplierSyncResult.Status.SKIPPED);
+		assertThat(b.failure().detail()).isEqualTo("circuit open");
+		assertThat(report.suppliers().stream().filter(r -> r.supplier().equals("a")).findFirst().orElseThrow().status())
+				.isEqualTo(SupplierSyncResult.Status.SUCCESS);
+		assertThat(propertyMappingRepository.count()).isEqualTo(3);   // 기존 매핑 유지(D-8)
+		assertThat(roomTypeMappingRepository.count()).isEqualTo(6);
 	}
 
 	private static SupplierOutcome supplier(SearchResponse response, String supplier) {

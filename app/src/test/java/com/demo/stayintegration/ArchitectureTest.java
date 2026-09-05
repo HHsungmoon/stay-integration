@@ -61,6 +61,12 @@ class ArchitectureTest {
 			.that().resideInAPackage("..controller..")
 			.should().dependOnClassesThat().areAnnotatedWith(Entity.class);
 
+	// 경계 2의 연장. 서킷은 어댑터의 내부 사정이다 — 열렸을 때 Skipped를 돌려주는 것까지 어댑터가 표현하므로 병합 쪽은 라이브러리를 몰라야 한다.
+	@ArchTest
+	static final ArchRule circuitBreakerIsAnAdapterConcern = noClasses()
+			.that().resideInAnyPackage("..search..", "..catalog..")
+			.should().dependOnClassesThat().resideInAPackage("io.github.resilience4j..");
+
 	private static ArchCondition<JavaClass> onlyBeDependedOnByClassesInTheSamePackage() {
 		return new ArchCondition<>("only be depended on by classes in the same package") {
 			@Override

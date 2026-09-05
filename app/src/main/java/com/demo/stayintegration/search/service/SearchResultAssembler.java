@@ -66,6 +66,7 @@ public class SearchResultAssembler {
 		SupplierId supplierId = outcome.supplier();
 		int calls = 0;
 		int failedCalls = 0;
+		int skippedCalls = 0;
 		int offers = 0;
 		int rejected = 0;
 		int unmapped = 0;
@@ -103,13 +104,16 @@ public class SearchResultAssembler {
 					}
 					log.warn("search: supplier {} call failed ({}: {}) after {}ms", supplierId, failure.kind(), failure.detail(), failure.elapsed().toMillis());
 				}
-				case SupplierResult.Skipped<AvailabilityResult> skipped -> skippedReason = skipped.reason();
+				case SupplierResult.Skipped<AvailabilityResult> skipped -> {
+					skippedCalls++;
+					skippedReason = skipped.reason();
+				}
 			}
 		}
 
 		SupplierOutcome.Status status = supplierStatus(calls, failedCalls);
 		FailureInfo failure = status == SupplierOutcome.Status.SKIPPED ? new FailureInfo("SKIPPED", false, skippedReason) : firstFailure;
-		return new SupplierOutcome(supplierId.value(), status, calls, failedCalls, outcome.elapsed().toMillis(), offers, rejected, unmapped, failure);
+		return new SupplierOutcome(supplierId.value(), status, calls, failedCalls, skippedCalls, outcome.elapsed().toMillis(), offers, rejected, unmapped, failure);
 	}
 
 	private static SupplierOutcome.Status supplierStatus(int calls, int failedCalls) {

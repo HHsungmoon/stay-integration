@@ -45,7 +45,7 @@ class StaySearchControllerTest {
 
 	private static SearchResponse response(SearchResponse.Status status, List<StayItem> items) {
 		return new SearchResponse(status, CHECK_IN, CHECK_IN.plusDays(3), 3, 2, 0,
-				List.of(new SupplierOutcome("a", SupplierOutcome.Status.SUCCESS, 1, 0, 84, items.size(), 0, 0, null)), items);
+				List.of(new SupplierOutcome("a", SupplierOutcome.Status.SUCCESS, 1, 0, 0, 84, items.size(), 0, 0, null)), items);
 	}
 
 	private static StayItem item() {

@@ -155,6 +155,7 @@ class SearchResultAssemblerTest {
 		SupplierOutcome b = supplierOutcome(response, "b");
 		assertThat(b.status()).isEqualTo(SupplierOutcome.Status.SKIPPED);
 		assertThat(b.calls()).isZero();
+		assertThat(b.skippedCalls()).isEqualTo(1);
 		assertThat(b.failure().kind()).isEqualTo("SKIPPED");
 		assertThat(b.failure().retryable()).isFalse();
 		assertThat(b.failure().detail()).isEqualTo("no mapped properties");
@@ -169,6 +170,26 @@ class SearchResultAssemblerTest {
 		assertThat(response.status()).isEqualTo(SearchResponse.Status.OK);
 		assertThat(response.items()).isEmpty();
 		assertThat(response.cacheable()).isFalse();
+	}
+
+	@Test
+	void chunksSkippedAfterTheCircuitOpenedMidRequestAreCountedWithoutChangingTheStatusRules() {
+		// 동시성 4로 앞 4청크가 실패해 서킷이 열리면 나머지는 Skipped로 돌아온다(07 §5). 세지 않으면 16청크가 응답에서 사라진다.
+		List<SupplierResult<AvailabilityResult>> results = new java.util.ArrayList<>();
+		for (int i = 0; i < 4; i++) results.add(success(A, offer(A, "H1", "R1", 3, null)));
+		for (int i = 0; i < 4; i++) results.add(failure(A, FailureKind.TIMEOUT, "no response within PT2S"));
+		for (int i = 0; i < 16; i++) results.add(skipped(A, "circuit open"));
+
+		SearchResponse response = assembler.assemble(REQUEST, LOOKUP, List.of(new SupplierFetchOutcome(A, results, ELAPSED)));
+
+		SupplierOutcome a = supplierOutcome(response, "a");
+		assertThat(a.status()).isEqualTo(SupplierOutcome.Status.PARTIAL);   // 판정 규칙은 그대로: 호출한 것 중 일부 실패
+		assertThat(a.calls()).isEqualTo(8);
+		assertThat(a.failedCalls()).isEqualTo(4);
+		assertThat(a.skippedCalls()).isEqualTo(16);
+		assertThat(a.offers()).isEqualTo(4);
+		assertThat(a.failure().kind()).isEqualTo("TIMEOUT");   // 첫 실패. SKIPPED는 실패가 아니다
+		assertThat(response.status()).isEqualTo(SearchResponse.Status.PARTIAL);
 	}
 
 	// ── 항목 변환 ─────────────────────────────────────────────────────────

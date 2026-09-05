@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @TestConfiguration(proxyBeanMethods = false)
-class TestcontainersConfiguration {
+public class TestcontainersConfiguration {
 
 	// spring-boot-docker-compose는 developmentOnly 스코프라 테스트 클래스패스에 없다.
 	// 테스트에서 DataSource 접속 정보를 줄 주체가 따로 필요해 컨테이너를 직접 띄운다.

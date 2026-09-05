@@ -67,6 +67,13 @@ class ArchitectureTest {
 			.that().resideInAnyPackage("..search..", "..catalog..")
 			.should().dependOnClassesThat().resideInAPackage("io.github.resilience4j..");
 
+	// 지표 이름·태그 규약은 common.SupplierCallMetrics 한 곳이 소유한다. 예외는 서킷 레지스트리를 묶는 어댑터 인프라뿐 —
+	// 병합 지점(search·catalog)이 Micrometer를 직접 잡으면 태그가 흩어져 대시보드 쿼리가 한쪽만 맞는 사고가 난다.
+	@ArchTest
+	static final ArchRule micrometerStaysInsideCommonAndAdapterSupport = noClasses()
+			.that().resideOutsideOfPackages("..common..", "..supplier.adapter.support..")
+			.should().dependOnClassesThat().resideInAPackage("io.micrometer..");
+
 	private static ArchCondition<JavaClass> onlyBeDependedOnByClassesInTheSamePackage() {
 		return new ArchCondition<>("only be depended on by classes in the same package") {
 			@Override

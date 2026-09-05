@@ -36,10 +36,15 @@ import com.demo.stayintegration.search.dto.request.SearchRequest;
 import com.demo.stayintegration.search.dto.response.SearchResponse;
 import com.demo.stayintegration.search.dto.response.StayItem;
 import com.demo.stayintegration.search.dto.response.SupplierOutcome;
+import com.demo.stayintegration.common.SupplierCallMetrics;
 import com.demo.stayintegration.search.service.StaySearchService;
 import com.demo.stayintegration.supplier.adapter.support.SupplierCallPipelines;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
@@ -75,6 +80,7 @@ class StaySearchWireTest {
 	@Autowired RoomTypeMappingRepository roomTypeMappingRepository;
 	@Autowired MockMvc mvc;
 	@Autowired SupplierCallPipelines supplierCallPipelines;
+	@Autowired MeterRegistry meterRegistry;
 	private final JsonMapper json = new JsonMapper();
 
 	@BeforeEach
@@ -277,6 +283,75 @@ class StaySearchWireTest {
 				.isEqualTo(SupplierSyncResult.Status.SUCCESS);
 		assertThat(propertyMappingRepository.count()).isEqualTo(3);   // 기존 매핑 유지(D-8)
 		assertThat(roomTypeMappingRepository.count()).isEqualTo(6);
+	}
+
+	// ── 관측성 (08) — 레지스트리는 컨텍스트에 누적되므로 델타로 본다 ──────
+
+	private double callCount(String supplier, String outcome) {
+		Timer timer = meterRegistry.find(SupplierCallMetrics.CALL).tag("supplier", supplier).tag("api", "availability").tag("outcome", outcome).timer();
+		return timer == null ? 0 : timer.count();
+	}
+
+	private double counter(String name, String... tags) {
+		Counter counter = meterRegistry.find(name).tags(tags).counter();
+		return counter == null ? 0 : counter.count();
+	}
+
+	@Test
+	void metricsAreProducedInTheSameMergePassAsTheResponse() {
+		mock.setMode("b", "availability", MockMode.ERROR);
+		// A-10023의 객실 하나만 비활성화한다. A-10044처럼 객실이 하나뿐인 숙소를 끄면 숙소 자체가 조회 대상에서 빠져 미매핑이 생기지 않는다
+		RoomTypeMapping familySuite = roomTypeMappingRepository.findAllBySupplier("a").stream()
+				.filter(r -> r.getSupplierRoomTypeCode().equals("FAM-STE")).findFirst().orElseThrow();
+		familySuite.deactivate(Instant.now());
+		roomTypeMappingRepository.save(familySuite);
+		double aSuccess = callCount("a", "success"), bServerError = callCount("b", "server_error");
+		double unmappedA = counter(SupplierCallMetrics.ITEMS_EXCLUDED, "supplier", "a", "reason", "unmapped");
+		double partial = counter(SupplierCallMetrics.SEARCH_RESULT, "status", "PARTIAL");
+
+		SearchResponse response = staySearchService.search(REQUEST).block();
+
+		assertThat(response.status()).isEqualTo(SearchResponse.Status.PARTIAL);
+		assertThat(supplier(response, "a").unmapped()).isEqualTo(1);
+		// 응답에 실린 사실과 같은 값이 지표에 있다 — 같은 순회에서 만들어졌기 때문이다
+		assertThat(callCount("a", "success")).isEqualTo(aSuccess + 1);
+		assertThat(callCount("b", "server_error")).isEqualTo(bServerError + 1);   // HTTP 200 + E503이 outcome=server_error로
+		assertThat(counter(SupplierCallMetrics.ITEMS_EXCLUDED, "supplier", "a", "reason", "unmapped")).isEqualTo(unmappedA + 1);
+		assertThat(counter(SupplierCallMetrics.SEARCH_RESULT, "status", "PARTIAL")).isEqualTo(partial + 1);
+		// 테스트 컨텍스트가 실제로 기록한다는 증명 — Boot의 지표 export 비활성 커스터마이저(micrometer-metrics-test)가 클래스패스에 없다
+		assertThat(callCount("a", "success")).isGreaterThanOrEqualTo(1);
+	}
+
+	@Test
+	void openCircuitShowsUpAsSkippedCounterAndStateGauge() {
+		double skipped = counter(SupplierCallMetrics.CALL_SKIPPED, "supplier", "b", "api", "availability");
+		openCircuitOf("b");
+
+		staySearchService.search(REQUEST).block();
+
+		assertThat(counter(SupplierCallMetrics.CALL_SKIPPED, "supplier", "b", "api", "availability")).isEqualTo(skipped + 1);
+		assertThat(callCount("b", "skipped")).isZero();   // Skipped는 Timer에 없다
+		// Resilience4j 지표가 MeterBinder 빈으로 묶여 있고, 태그 name이 공급사 id다
+		Gauge open = meterRegistry.find("resilience4j.circuitbreaker.state").tag("name", "b").tag("state", "open").gauge();
+		assertThat(open).isNotNull();
+		assertThat(open.value()).isEqualTo(1.0);
+	}
+
+	@Test
+	void actuatorExposesHealthAndMetricsButNotEnv() throws Exception {
+		staySearchService.search(REQUEST).block();   // supplier.call이 최소 한 번은 기록되어 있게
+
+		MvcResult metrics = mvc.perform(get("/actuator/metrics/supplier.call?tag=supplier:a&tag=outcome:success")).andReturn();
+		assertThat(metrics.getResponse().getStatus()).isEqualTo(200);
+		JsonNode body = json.readTree(metrics.getResponse().getContentAsString());
+		assertThat(body.path("name").asString()).isEqualTo("supplier.call");
+		assertThat(body.path("measurements")).isNotEmpty();
+
+		MvcResult health = mvc.perform(get("/actuator/health")).andReturn();
+		assertThat(health.getResponse().getStatus()).isEqualTo(200);
+		assertThat(json.readTree(health.getResponse().getContentAsString()).path("status").asString()).isEqualTo("UP");
+
+		assertThat(mvc.perform(get("/actuator/env")).andReturn().getResponse().getStatus()).isEqualTo(404);   // API 키가 보이는 곳은 열지 않는다
 	}
 
 	private static SupplierOutcome supplier(SearchResponse response, String supplier) {

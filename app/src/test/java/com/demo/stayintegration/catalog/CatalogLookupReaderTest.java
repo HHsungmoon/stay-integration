@@ -6,7 +6,7 @@ import com.demo.stayintegration.catalog.entity.RoomTypeMapping;
 import com.demo.stayintegration.catalog.repository.PropertyMappingRepository;
 import com.demo.stayintegration.catalog.repository.RoomTypeMappingRepository;
 import com.demo.stayintegration.catalog.function.CatalogMappingReader;
-import com.demo.stayintegration.catalog.service.CatalogLookupLoader;
+import com.demo.stayintegration.catalog.function.CatalogLookupReader;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
@@ -28,8 +28,8 @@ import jakarta.persistence.EntityManager;
 // 통계로 쿼리 수가 1인지 본다 — JOIN FETCH가 빠지면 property 접근마다 쿼리가 나간다(N+1).
 @DataJpaTest(properties = "spring.jpa.properties.hibernate.generate_statistics=true")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import({ TestcontainersConfiguration.class, CatalogLookupLoader.class, CatalogMappingReader.class })
-class CatalogLookupLoaderTest {
+@Import({ TestcontainersConfiguration.class, CatalogLookupReader.class, CatalogMappingReader.class })
+class CatalogLookupReaderTest {
 
 	private static final Instant NOW = Instant.parse("2026-10-01T00:00:00Z");
 	private static final SupplierId A = new SupplierId("A");
@@ -37,7 +37,7 @@ class CatalogLookupLoaderTest {
 
 	@Autowired PropertyMappingRepository propertyMappingRepository;
 	@Autowired RoomTypeMappingRepository roomTypeMappingRepository;
-	@Autowired CatalogLookupLoader catalogLookupLoader;
+	@Autowired CatalogLookupReader catalogLookupReader;
 	@Autowired EntityManager em;
 
 	@Test
@@ -60,7 +60,7 @@ class CatalogLookupLoaderTest {
 		Statistics stats = em.getEntityManagerFactory().unwrap(SessionFactory.class).getStatistics();
 		stats.clear();
 
-		CatalogLookup lookup = catalogLookupLoader.load();
+		CatalogLookup lookup = catalogLookupReader.load();
 
 		assertThat(stats.getPrepareStatementCount()).isEqualTo(1);
 
@@ -80,7 +80,7 @@ class CatalogLookupLoaderTest {
 
 	@Test
 	void emptyCatalogGivesEmptyLookup() {
-		CatalogLookup lookup = catalogLookupLoader.load();
+		CatalogLookup lookup = catalogLookupReader.load();
 		assertThat(lookup.isEmpty()).isTrue();
 		assertThat(lookup.hotelCodesOf(A)).isEmpty();
 	}

@@ -32,4 +32,5 @@ repository 접근을 모으는 계층. `controller → service → function → 
 | `CatalogMappingReader.existingBySupplier` | 두 repository를 읽어 코드 → 엔티티 Map 둘로 조립 |
 | `CatalogMappingReader.activeRoomTypesWithProperty` | JOIN FETCH 쿼리 선택 |
 | `CatalogMappingReader.countsOf` | 네 번의 count를 한 record로 |
+| `CatalogLookupReader.load` | 엔티티 → 검색용 `CatalogLookup` 조립. search가 catalog **서비스**가 아니라 이 function을 주입한다 — feature 간 데이터 공유가 function으로 가는 첫 예 |
 | `CatalogMappingStore.createProperty / createRoomType` | 포트 타입 → 엔티티 생성 + 저장. 갱신은 도메인 메서드가 하므로 여기 없다 |

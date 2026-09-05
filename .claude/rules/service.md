@@ -27,5 +27,6 @@ paths:
   `CatalogLookup` 값만 알고 JPA를 모른다.
 - 데드라인은 **공급사 단위**로 `take(deadline)` — 도착한 청크는 살리고 안 온 청크 수만큼 `TIMEOUT`을 채운다(D-9). 청크 수 = 결과 수여야 `failedCalls`가 정직하다.
 - `SKIPPED`(호출하지 않음)는 성공에도 실패에도 세지 않는다. 전부 SKIPPED면 `OK` + 빈 items.
-- 결과를 병합하는 **그 지점 한 곳(assembler)에서** 관측성 지표를 기록한다. 계측 코드를 여러 곳에 흩지 않는다.
+- 관측성 지표는 **service의 병합 지점**에서 `common.SupplierCallMetrics`에 `SupplierResult`를 넘겨 기록한다(검색은 `.map` 안, 동기화는 결과 루프).
+  assembler는 순수 함수로 남긴다 — 레지스트리를 주입하면 단위 테스트가 레지스트리를 알아야 한다. 태그 이름은 service가 모른다.
 - `search`·`catalog`는 `supplier.adapter..`에 의존하지 않는다 — **포트만 안다.** 어댑터는 레지스트리로 주입된다.

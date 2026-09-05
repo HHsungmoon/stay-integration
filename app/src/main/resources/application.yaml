@@ -18,6 +18,14 @@ spring:
 server:
   port: 8080
 
+management:
+  endpoints:
+    web:
+      exposure:
+        # Boot 4 기본은 health뿐. metrics를 연다. env·beans는 열지 않는다 — env에 공급사 API 키가 보인다.
+        # 관리 엔드포인트 인증은 범위 밖(README). Prometheus 레지스트리는 스크레이퍼가 생길 때 설정 두 줄로 붙인다(08 §6)
+        include: health,metrics
+
 catalog:
   # 기동 시 1회 동기화(D-8). 실패해도 앱은 뜨고 기존 매핑으로 서비스한다.
   sync-on-startup: true

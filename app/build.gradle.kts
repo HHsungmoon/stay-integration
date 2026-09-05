@@ -24,6 +24,8 @@ dependencies {
 	// 웹 계층은 아래 webmvc(블로킹) 그대로 둔다.
 	implementation("org.springframework.boot:spring-boot-starter-webclient")
 	implementation("org.springframework.boot:spring-boot-starter-webmvc")
+	// 관측성(08). 지표는 병합 지점에서 SupplierResult를 한 번 더 보는 것으로 나온다 — 새로 측정하지 않는다.
+	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	compileOnly("org.projectlombok:lombok")
 	developmentOnly("org.springframework.boot:spring-boot-docker-compose")
 	runtimeOnly("org.postgresql:postgresql")
@@ -32,6 +34,8 @@ dependencies {
 	// 체인에 명시적으로 붙이는 편이 동작이 드러난다. -micrometer는 MeterRegistry가 생기는 8단계에 함께 넣는다.
 	implementation("io.github.resilience4j:resilience4j-circuitbreaker:2.3.0")
 	implementation("io.github.resilience4j:resilience4j-reactor:2.3.0")
+	// -circuitbreaker의 전이 의존으로 이미 들어오지만, 쓰는 것은 명시한다 — 전이 의존은 상위가 빼면 조용히 사라진다.
+	implementation("io.github.resilience4j:resilience4j-micrometer:2.3.0")
 	testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
 	testImplementation("org.springframework.boot:spring-boot-starter-validation-test")
 	testImplementation("org.springframework.boot:spring-boot-starter-webclient-test")

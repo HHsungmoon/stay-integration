@@ -16,6 +16,8 @@ import com.demo.stayintegration.catalog.dto.response.SyncReport;
 import com.demo.stayintegration.catalog.dto.response.SyncReport.SupplierSyncResult;
 import com.demo.stayintegration.catalog.function.CatalogMappingReader;
 import com.demo.stayintegration.catalog.function.CatalogMappingReader.SupplierCounts;
+import com.demo.stayintegration.common.SupplierCallMetrics;
+import com.demo.stayintegration.common.SupplierCallMetrics.Api;
 import com.demo.stayintegration.supplier.port.CatalogProperty;
 import com.demo.stayintegration.supplier.port.FailureKind;
 import com.demo.stayintegration.supplier.port.SupplierAdapter;
@@ -40,6 +42,7 @@ public class CatalogSyncService {
 	private final CatalogMappingReader catalogMappingReader;
 	private final Clock clock;
 	private final CatalogProperties catalogProperties;
+	private final SupplierCallMetrics supplierCallMetrics;
 
 	// 동시에 두 번 돌면 유니크 제약이 둘째를 실패시키긴 하지만, 실패로 끝나는 것보다 안 시작하는 편이 낫다.
 	// 단일 인스턴스 가정. 다중 인스턴스는 설계 문서의 남는 문제.
@@ -55,6 +58,7 @@ public class CatalogSyncService {
 
 			List<SupplierSyncResult> results = new ArrayList<>();
 			for (SupplierResult<List<CatalogProperty>> result : fetchAll()) {
+				supplierCallMetrics.record(Api.CATALOG, result);   // 병합 지점 — 리포트와 지표가 같은 순회에서 나온다
 				results.add(apply(result, startedAt));
 			}
 

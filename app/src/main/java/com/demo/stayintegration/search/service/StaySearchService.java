@@ -2,10 +2,19 @@ package com.demo.stayintegration.search.service;
 
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 import com.demo.stayintegration.catalog.dto.CatalogLookup;
 import com.demo.stayintegration.catalog.function.CatalogLookupReader;
+import com.demo.stayintegration.common.SupplierCallMetrics;
+import com.demo.stayintegration.common.SupplierCallMetrics.Api;
+import com.demo.stayintegration.common.SupplierCallMetrics.ExclusionReason;
 import com.demo.stayintegration.search.dto.request.SearchRequest;
 import com.demo.stayintegration.search.dto.response.SearchResponse;
+import com.demo.stayintegration.search.dto.response.SupplierOutcome;
+import com.demo.stayintegration.supplier.port.AvailabilityResult;
+import com.demo.stayintegration.supplier.port.SupplierId;
+import com.demo.stayintegration.supplier.port.SupplierResult;
 
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
@@ -19,11 +28,32 @@ public class StaySearchService {
 	private final CatalogLookupReader catalogLookupReader;
 	private final SupplierAvailabilityFetcher supplierAvailabilityFetcher;
 	private final SearchResultAssembler searchResultAssembler;
+	private final SupplierCallMetrics supplierCallMetrics;
 
 	public Mono<SearchResponse> search(SearchRequest request) {
 		// JPA는 체인 시작 전에 한 번. 체인 안(fetcher·assembler)은 이 값만 본다 — 스레드 모델 1.
 		CatalogLookup lookup = catalogLookupReader.load();
 		return supplierAvailabilityFetcher.fetchAll(request, lookup)
-				.map(outcomes -> searchResultAssembler.assemble(request, lookup, outcomes));
+				.map(outcomes -> {
+					SearchResponse response = searchResultAssembler.assemble(request, lookup, outcomes);
+					record(outcomes, response);
+					return response;
+				});
+	}
+
+	// 지표는 병합 지점 한 곳에서. assembler에 레지스트리를 주입하지 않는 이유: 순수 함수로 남겨야 단위 테스트가 레지스트리를 몰라도 된다.
+	// 응답에 실린 사실(failedCalls·unmapped)과 지표가 같은 순회에서 나오므로 둘이 어긋날 수 없다. 이벤트 루프 위지만 Micrometer 기록은 무잠금이다.
+	private void record(List<SupplierFetchOutcome> outcomes, SearchResponse response) {
+		for (SupplierFetchOutcome outcome : outcomes) {
+			for (SupplierResult<AvailabilityResult> result : outcome.results()) {
+				supplierCallMetrics.record(Api.AVAILABILITY, result);
+			}
+		}
+		for (SupplierOutcome supplierOutcome : response.suppliers()) {
+			SupplierId supplierId = new SupplierId(supplierOutcome.supplier());
+			supplierCallMetrics.recordExcludedItems(supplierId, ExclusionReason.REJECTED, supplierOutcome.rejected());
+			supplierCallMetrics.recordExcludedItems(supplierId, ExclusionReason.UNMAPPED, supplierOutcome.unmapped());
+		}
+		supplierCallMetrics.recordSearchResult(response.status().name());
 	}
 }

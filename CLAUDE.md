@@ -47,7 +47,7 @@
   Boot 3 자동설정에 묶여 있고, 어노테이션 마법 대신 Reactor 체인에 명시적으로 붙이는 편이 동작이 드러난다.
   서킷은 **공급사별로** 따로 둔다(카탈로그·재고 공유). 열려서 호출하지 않은 경우는 `SupplierResult.Skipped`.
   **어댑터가 실패를 값으로 돌려주므로 `recordResult` 술어가 없으면 서킷은 영원히 열리지 않는다** — 기록 기준은 `FailureKind.retryable()`.
-  `-micrometer`는 `MeterRegistry`가 생기는 관측성 단계에서 함께 넣는다.
+  `-micrometer`는 `-circuitbreaker`의 전이 의존으로도 들어오지만 쓰는 것이라 명시 선언한다.
 - **그 외 부가 라이브러리는 Boot 4 호환을 먼저 확인한다**(springdoc 등). 의존성 해결이 30분 내에
   안 되면 도입하지 않고, 해당 기능은 직접 구현하거나 설계 문서로 남긴다. 그 판단을 JOURNAL에 기록한다.
 - API 문서(springdoc-openapi **3.x** — 2.x는 Boot 3용)는 선택. 핵심 흐름이 끝난 뒤에 검토한다.
@@ -207,11 +207,15 @@ GET /api/v1/stays/search?checkIn=2026-09-01&checkOut=2026-09-04&adults=2&childre
 
 `SupplierResult`가 이미 공급사·소요시간·결과 분류를 들고 있으므로 집계 지점을 **결과 병합 한 곳**에 두면 비용이 거의 없다.
 
-- `supplier.call` (Timer) — 태그 `supplier`, `api`(catalog|availability), `outcome`(success|timeout|supplier_error|auth_error|normalization_error)
+- `supplier.call` (Timer) — 태그 `supplier`, `api`(catalog|availability), `outcome`(`success` + **`FailureKind` 소문자 8종**).
+  5값으로 접지 않는다(2026-09-05) — `RATE_LIMITED`와 `SERVER_ERROR`가 합쳐지면 동시성 상한의 근거인 429 비율을 잃는다
+- `supplier.call.skipped` (Counter) — `Skipped`는 지연이 없는 사건이라 Timer가 아니다(elapsed 0이 percentile을 왜곡한다)
+- `supplier.items.excluded` (Counter, `reason`=rejected|unmapped) · `search.result` (Counter, `status`) · 서킷은 Resilience4j 지표를 `MeterBinder`로 묶는다
 - 여기서 공급사별 **성공률·응답 지연 분포·타임아웃 비율**이 모두 파생된다
-- 정규화 실패·미매핑 상품(D-10)도 같은 축으로 센다
-- Actuator로 노출하고 확인 방법을 README에 적는다
-- 태그 카디널리티 주의: 공급사 이름은 안전하지만 숙소 코드처럼 무한히 늘어나는 값을 태그로 쓰지 않는다
+- **기록은 `common.SupplierCallMetrics` 한 곳**, 호출은 병합 지점 둘(검색 service의 map · 동기화 루프). 응답에 실린 사실과 지표가 같은 순회에서 나온다.
+  어댑터 파이프라인에서 기록하지 않는다 — 50개 사전 거절·데드라인 보정·fetcher 안전망의 결과를 보지 못한다
+- Actuator `health`·`metrics`만 노출(`env`는 API 키가 보인다). Prometheus는 스크레이퍼가 생길 때 설정 두 줄. 확인 방법은 README
+- 태그 카디널리티 주의: 공급사 이름은 안전하지만 숙소 코드·`detail`·`reason`처럼 무한히 늘어나는 값을 태그로 쓰지 않는다
 
 ### 실패 분류 — `FailureKind` (재시도 정책과 관측성 태그의 기반)
 

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(git commit*)",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.claude/hooks/check-commit-policy.sh\"",
+            "timeout": 15,
+            "statusMessage": "저장소 정책 검사 중"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -50,12 +50,51 @@ public final class MockCatalog {
 			))
 	);
 
-	public static Optional<AHotel> findA(String code) {
-		return A.stream().filter(h -> h.code().equals(code)).findFirst();
+	// 합성 숙소 — 50개 청크 분할·동시성 상한·데드라인이 실제 HTTP로 흐르는지 보기 위한 규모용 데이터.
+	// 부록 예시(위)는 그대로 두고 그 뒤에 n개를 결정적으로 붙인다. 코드 형식이 달라(A-9xxxxx / B9xxxxx) 예시와 절대 겹치지 않는다.
+	// 객실은 하나씩(items 수 = 숙소 수), 재고는 항상 3, 요금은 인덱스에 따라 조금씩 달라 정렬·합산이 우연히 맞는 일이 없게 한다.
+	private static final String SYNTHETIC_A_PREFIX = "A-9";
+	private static final String SYNTHETIC_B_PREFIX = "B9";
+
+	public static List<AHotel> hotelsA(int synthetic) {
+		List<AHotel> all = new java.util.ArrayList<>(A);
+		for (int i = 1; i <= synthetic; i++) all.add(syntheticA(i));
+		return all;
 	}
 
-	public static Optional<BProperty> findB(String code) {
-		return B.stream().filter(p -> p.code().equals(code)).findFirst();
+	public static List<BProperty> propertiesB(int synthetic) {
+		List<BProperty> all = new java.util.ArrayList<>(B);
+		for (int i = 1; i <= synthetic; i++) all.add(syntheticB(i));
+		return all;
+	}
+
+	public static Optional<AHotel> findA(String code, int synthetic) {
+		Optional<AHotel> base = A.stream().filter(h -> h.code().equals(code)).findFirst();
+		if (base.isPresent()) return base;
+		int index = syntheticIndex(code, SYNTHETIC_A_PREFIX);
+		return index >= 1 && index <= synthetic ? Optional.of(syntheticA(index)) : Optional.empty();
+	}
+
+	public static Optional<BProperty> findB(String code, int synthetic) {
+		Optional<BProperty> base = B.stream().filter(p -> p.code().equals(code)).findFirst();
+		if (base.isPresent()) return base;
+		int index = syntheticIndex(code, SYNTHETIC_B_PREFIX);
+		return index >= 1 && index <= synthetic ? Optional.of(syntheticB(index)) : Optional.empty();
+	}
+
+	private static AHotel syntheticA(int i) {
+		return new AHotel(SYNTHETIC_A_PREFIX + String.format("%05d", i), "Synthetic Hotel A " + i, List.of(
+				new ARoom("STD-DBL", "Standard Double", 2, false, new int[]{3, 3, 3}, new int[]{100_000 + i * 10, 100_000 + i * 10, 100_000 + i * 10})));
+	}
+
+	private static BProperty syntheticB(int i) {
+		return new BProperty(SYNTHETIC_B_PREFIX + String.format("%05d", i), "Synthetic Property B " + i, List.of(
+				new BRoom("R-1", "Standard Room", 2, true, new int[]{3, 3, 3}, 130_000 + i * 10)));
+	}
+
+	private static int syntheticIndex(String code, String prefix) {
+		if (code == null || !code.startsWith(prefix) || code.length() != prefix.length() + 5) return -1;
+		try { return Integer.parseInt(code.substring(prefix.length())); } catch (NumberFormatException e) { return -1; }
 	}
 
 	private static int at(int[] pattern, int i) {

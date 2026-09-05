@@ -27,6 +27,17 @@ public class MockModeRegistry {
 	// no-response로 붙잡아 둔 응답. reset 때 끊어 주지 않으면 테스트 간에 연결이 남는다.
 	private final Set<DeferredResult<?>> pending = ConcurrentHashMap.newKeySet();
 
+	// 공급사별로 부록 예시 뒤에 붙일 합성 숙소 수. 0이면 예시 그대로. 규모 테스트(50개 청크·데드라인)가 런타임에 올린다.
+	private final java.util.concurrent.atomic.AtomicInteger syntheticHotels = new java.util.concurrent.atomic.AtomicInteger();
+
+	public int syntheticHotels() {
+		return syntheticHotels.get();
+	}
+
+	public void setSyntheticHotels(int count) {
+		syntheticHotels.set(Math.max(0, count));
+	}
+
 	public State get(String supplier, String api) {
 		return states.getOrDefault(key(supplier, api), State.NORMAL);
 	}
@@ -47,6 +58,7 @@ public class MockModeRegistry {
 
 	public void reset() {
 		states.clear();
+		syntheticHotels.set(0);
 		pending.forEach(r -> r.setErrorResult(ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build()));
 		pending.clear();
 	}
@@ -61,6 +73,7 @@ public class MockModeRegistry {
 						: st.mode().label());
 			}
 		}
+		view.put("catalog.synthetic", String.valueOf(syntheticHotels.get()));
 		return view;
 	}
 

@@ -21,6 +21,7 @@ import com.demo.mocksupplier.b.SupplierBResponse.Search;
 import com.demo.mocksupplier.catalog.MockCatalog;
 import com.demo.mocksupplier.common.AvailabilityQuery;
 import com.demo.mocksupplier.common.MockProperties;
+import com.demo.mocksupplier.control.MockModeRegistry;
 import com.demo.mocksupplier.common.RequestError;
 import com.demo.mocksupplier.common.ResponseGate;
 
@@ -32,10 +33,12 @@ public class SupplierBController {
 
 	private final ResponseGate gate;
 	private final MockProperties properties;
+	private final MockModeRegistry registry;
 
-	public SupplierBController(ResponseGate gate, MockProperties properties) {
+	public SupplierBController(ResponseGate gate, MockProperties properties, MockModeRegistry registry) {
 		this.gate = gate;
 		this.properties = properties;
+		this.registry = registry;
 	}
 
 	@GetMapping("/properties")
@@ -70,7 +73,7 @@ public class SupplierBController {
 	}
 
 	private ResponseEntity<?> propertiesBody() {
-		List<Property> items = MockCatalog.B.stream()
+		List<Property> items = MockCatalog.propertiesB(registry.syntheticHotels()).stream()
 				.map(p -> new Property(p.code(), p.name(), p.rooms().stream()
 						.map(r -> new Room(r.code(), r.name(), r.maxOccupancy()))
 						.toList()))
@@ -81,7 +84,7 @@ public class SupplierBController {
 	private ResponseEntity<?> searchBody(AvailabilityQuery query) {
 		List<Item> items = new ArrayList<>();
 		for (String code : query.codes()) {
-			MockCatalog.findB(code).ifPresent(property -> {
+			MockCatalog.findB(code, registry.syntheticHotels()).ifPresent(property -> {
 				for (MockCatalog.BRoom room : property.rooms()) {
 					if (room.maxOccupancy() < query.guests()) {
 						continue;

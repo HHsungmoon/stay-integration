@@ -57,6 +57,11 @@ public final class MockSupplierServer {
 		registry().set(supplier, api, MockMode.DELAY, delayMs);
 	}
 
+	// 부록 예시 뒤에 공급사마다 count개의 합성 숙소를 붙인다(0 = 예시 그대로). reset()이 0으로 되돌린다.
+	public void syntheticHotels(int count) {
+		registry().setSyntheticHotels(count);
+	}
+
 	public void reset() {
 		registry().reset();
 	}

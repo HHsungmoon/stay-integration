@@ -64,10 +64,27 @@ class MockSupplierContractTest {
 		@Test
 		void startsWithEveryApiInNormalMode() throws Exception {
 			JsonNode state = body(get("/control", null));
-			assertThat(state.size()).isEqualTo(4);
+			assertThat(state.size()).isEqualTo(5);   // 모드 4 + 합성 숙소 수
 			for (String key : List.of("a.catalog", "a.availability", "b.catalog", "b.availability")) {
 				assertThat(state.path(key).asString()).isEqualTo("normal");
 			}
+			assertThat(state.path("catalog.synthetic").asString()).isEqualTo("0");
+		}
+
+		@Test
+		void syntheticHotelsExtendBothCatalogsAndAnswerAvailabilityUntilReset() throws Exception {
+			// 규모 테스트용. 부록 예시 뒤에 붙고, 예시와 코드 형식이 달라 겹치지 않는다
+			JsonNode state = body(post("/control/catalog/synthetic?count=60"));
+			assertThat(state.path("catalog.synthetic").asString()).isEqualTo("60");
+			assertThat(body(get("/a/v1/hotels", "mock-key-a")).path("items").size()).isEqualTo(2 + 60);
+			assertThat(body(get("/b/api/properties", "mock-key-b")).path("data").path("items").size()).isEqualTo(1 + 60);
+			JsonNode availability = body(get("/a/v1/availability?hotelCodes=A-900060,A-900061&checkIn=2026-09-01&checkOut=2026-09-04&adults=2&children=0", "mock-key-a"));
+			assertThat(availability.path("items").size()).isEqualTo(1);   // 60번은 있고 61번은 없다(범위 밖 코드는 무시)
+			assertThat(availability.path("items").get(0).path("hotelCode").asString()).isEqualTo("A-900060");
+			assertThat(post("/control/catalog/synthetic?count=-1").statusCode()).isEqualTo(400);
+
+			post("/control/reset");
+			assertThat(body(get("/a/v1/hotels", "mock-key-a")).path("items").size()).isEqualTo(2);
 		}
 
 		@Test
@@ -103,9 +120,10 @@ class MockSupplierContractTest {
 			post("/control/a/mode?value=error");
 			post("/control/b/mode?value=no-response");
 			JsonNode state = body(post("/control/reset"));
-			for (JsonNode v : state) {
-				assertThat(v.asString()).isEqualTo("normal");
+			for (String key : List.of("a.catalog", "a.availability", "b.catalog", "b.availability")) {
+				assertThat(state.path(key).asString()).isEqualTo("normal");
 			}
+			assertThat(state.path("catalog.synthetic").asString()).isEqualTo("0");
 		}
 	}
 

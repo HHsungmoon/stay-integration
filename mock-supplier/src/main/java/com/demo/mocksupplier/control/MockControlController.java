@@ -53,6 +53,16 @@ public class MockControlController {
 		return registry.snapshot();
 	}
 
+	// 공급사마다 부록 예시 뒤에 합성 숙소 count개를 붙인다. 카탈로그 동기화를 다시 돌려야 본체가 알게 된다.
+	@PostMapping("/catalog/synthetic")
+	public Map<String, String> setSyntheticHotels(@RequestParam int count) {
+		if (count < 0 || count > 5_000) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "count must be within 0..5000");
+		}
+		registry.setSyntheticHotels(count);
+		return registry.snapshot();
+	}
+
 	@PostMapping("/reset")
 	public Map<String, String> reset() {
 		registry.reset();

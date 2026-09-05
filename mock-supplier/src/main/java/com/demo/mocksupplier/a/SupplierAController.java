@@ -22,6 +22,7 @@ import com.demo.mocksupplier.a.SupplierAResponse.RoomType;
 import com.demo.mocksupplier.catalog.MockCatalog;
 import com.demo.mocksupplier.common.AvailabilityQuery;
 import com.demo.mocksupplier.common.MockProperties;
+import com.demo.mocksupplier.control.MockModeRegistry;
 import com.demo.mocksupplier.common.RequestError;
 import com.demo.mocksupplier.common.ResponseGate;
 
@@ -33,10 +34,12 @@ public class SupplierAController {
 
 	private final ResponseGate gate;
 	private final MockProperties properties;
+	private final MockModeRegistry registry;
 
-	public SupplierAController(ResponseGate gate, MockProperties properties) {
+	public SupplierAController(ResponseGate gate, MockProperties properties, MockModeRegistry registry) {
 		this.gate = gate;
 		this.properties = properties;
+		this.registry = registry;
 	}
 
 	@GetMapping("/hotels")
@@ -72,7 +75,7 @@ public class SupplierAController {
 	}
 
 	private ResponseEntity<?> hotelsBody() {
-		List<Hotel> hotels = MockCatalog.A.stream()
+		List<Hotel> hotels = MockCatalog.hotelsA(registry.syntheticHotels()).stream()
 				.map(h -> new Hotel(h.code(), h.name(), h.roomTypes().stream()
 						.map(r -> new RoomType(r.code(), r.name(), r.maxOccupancy()))
 						.toList()))
@@ -84,7 +87,7 @@ public class SupplierAController {
 		List<Item> items = new ArrayList<>();
 		for (String code : query.codes()) {
 			// 모르는 코드는 오류 없이 무시한다 — 실제 공급사도 그렇게 동작할 것이다
-			MockCatalog.findA(code).ifPresent(hotel -> {
+			MockCatalog.findA(code, registry.syntheticHotels()).ifPresent(hotel -> {
 				for (MockCatalog.ARoom room : hotel.roomTypes()) {
 					if (room.maxOccupancy() < query.guests()) {
 						continue;   // 스펙: 요청 인원을 수용 가능한 객실 타입만 반환

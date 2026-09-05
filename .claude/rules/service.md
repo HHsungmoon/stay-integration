@@ -22,5 +22,10 @@ paths:
 - **`.block()`은 컨트롤러 경계에서 단 한 번.** 체인 중간의 block은 이벤트 루프를 막는다.
 - 공급사 실패는 예외로 전파하지 않는다 — `SupplierResult` 값으로 받아 합친다.
   성공 개수로 `status`(`OK` | `PARTIAL` | `ALL_FAILED`)를 정하고, 실패한 공급사를 응답에 담는다.
-- 결과를 병합하는 **그 지점 한 곳에서** 관측성 지표를 기록한다. 계측 코드를 여러 곳에 흩지 않는다.
+- 검색은 셋으로 나눈다: `StaySearchService`(진입점 — lookup 읽기는 체인 **밖**) → `SupplierAvailabilityFetcher`(청크·동시성·데드라인.
+  결과를 해석하지 않는다) → `SearchResultAssembler`(병합·ID 변환·D-10·D-11·상태 판정. 순수 함수). fetcher와 assembler는 `catalog`의
+  `CatalogLookup` 값만 알고 JPA를 모른다.
+- 데드라인은 **공급사 단위**로 `take(deadline)` — 도착한 청크는 살리고 안 온 청크 수만큼 `TIMEOUT`을 채운다(D-9). 청크 수 = 결과 수여야 `failedCalls`가 정직하다.
+- `SKIPPED`(호출하지 않음)는 성공에도 실패에도 세지 않는다. 전부 SKIPPED면 `OK` + 빈 items.
+- 결과를 병합하는 **그 지점 한 곳(assembler)에서** 관측성 지표를 기록한다. 계측 코드를 여러 곳에 흩지 않는다.
 - `search`·`catalog`는 `supplier.adapter..`에 의존하지 않는다 — **포트만 안다.** 어댑터는 레지스트리로 주입된다.

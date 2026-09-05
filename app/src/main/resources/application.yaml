@@ -40,3 +40,11 @@ supplier:
       api-key: mock-key-b
       connect-timeout: 500ms
       response-timeout: 2s
+
+search:
+  # 공급사 계약 상한. 어댑터가 51개를 거절하므로 이 값이 틀리면 테스트가 바로 잡는다
+  chunk-size: 50
+  # 한 공급사에 동시에 여는 연결 수. 응답 2s × 4 = 한 파동에 숙소 200개. 근거 있는 값이 아니라 출발점(06 §4·§13)
+  concurrency-per-supplier: 4
+  # D-7 오케스트레이션 데드라인. 공급사 단위로 걸리며, 초과 시 도착한 청크는 살리고 안 온 청크만 TIMEOUT(D-9)
+  deadline: 3s

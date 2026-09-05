@@ -30,7 +30,11 @@
 - Spring Web MVC(블로킹) · Spring Data JPA · PostgreSQL · Lombok · Validation
 - **외부 공급사 호출은 WebClient만 쓴다 — `RestClient`·`RestTemplate` 금지.**
   다수 공급사 병렬 호출과 타임아웃 제어가 이 시스템의 핵심이고, 그 제어권이 필요하다.
-  `spring-boot-starter-webflux`는 WebClient를 얻기 위한 것이며 **WebFlux 전면 도입이 아니다** — 웹 계층은 webmvc 그대로.
+  의존성은 **`spring-boot-starter-webclient`** — Boot 4는 WebClient 자동설정(`WebClient.Builder` 빈)을 `spring-boot-webclient`
+  별도 모듈로 쪼갰고, `starter-webflux`만으로는 그 빈이 없다. `starter-webflux`는 WebFlux 서버까지 끌고 오므로 쓰지 않는다 —
+  **WebFlux 전면 도입이 아니다**, 웹 계층은 webmvc 그대로.
+- **테스트의 공급사 응답 스텁은 Spring `ExchangeFunction`으로** — `ClientResponse.create(...)`. MockWebServer·WireMock을 넣지 않는다
+  (BOM 밖, 최신이 alpha/beta). 실제 타임아웃·연결 거부는 `:mock-supplier` 통합 테스트가 맡는다.
 - **Lombok** — 엔티티 보일러플레이트용. 불변 DTO는 Lombok이 아니라 `record`.
   (엔티티에서 쓸 것과 금지할 것은 `.claude/rules/entity.md`)
 - **Jackson 3**(`tools.jackson.databind`) — Boot 4의 HTTP 메시지 컨버터가 쓰는 건 이쪽이다.

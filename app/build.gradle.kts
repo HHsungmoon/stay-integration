@@ -22,7 +22,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	// WebFlux는 전면 도입이 아니라 WebClient(공급사 병렬 호출·타임아웃 제어)를 쓰기 위한 것이다.
 	// 웹 계층은 아래 webmvc(블로킹) 그대로 둔다.
-	implementation("org.springframework.boot:spring-boot-starter-webflux")
+	implementation("org.springframework.boot:spring-boot-starter-webclient")
 	implementation("org.springframework.boot:spring-boot-starter-webmvc")
 	compileOnly("org.projectlombok:lombok")
 	developmentOnly("org.springframework.boot:spring-boot-docker-compose")
@@ -30,7 +30,7 @@ dependencies {
 	annotationProcessor("org.projectlombok:lombok")
 	testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
 	testImplementation("org.springframework.boot:spring-boot-starter-validation-test")
-	testImplementation("org.springframework.boot:spring-boot-starter-webflux-test")
+	testImplementation("org.springframework.boot:spring-boot-starter-webclient-test")
 	testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
 	// 테스트는 실제 PostgreSQL 컨테이너를 띄워 검증한다.
 	// 매핑의 upsert 멱등성·유니크 제약이 이 프로젝트의 불변 조건인데,
@@ -45,6 +45,12 @@ dependencies {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+	// Java 25는 Netty의 네이티브 라이브러리 로딩(restricted method)에 경고를 낸다. 허용을 명시해 빌드 출력에서 지운다.
+	jvmArgs("--enable-native-access=ALL-UNNAMED")
+}
+
+tasks.named<org.springframework.boot.gradle.tasks.run.BootRun>("bootRun") {
+	jvmArgs("--enable-native-access=ALL-UNNAMED")
 }
 
 // deprecation 경고를 파일명만 아니라 어느 API인지까지 보여준다.

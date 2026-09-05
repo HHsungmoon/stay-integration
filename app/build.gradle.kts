@@ -26,6 +26,9 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-webmvc")
 	// 관측성(08). 지표는 병합 지점에서 SupplierResult를 한 번 더 보는 것으로 나온다 — 새로 측정하지 않는다.
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
+	// API 문서 자동화. Boot 4에는 3.x가 필요하다(2.x는 Boot 3용 — 컨트롤러 어노테이션 패키지가 다르다). BOM 밖이라 버전을 직접 적는다.
+	// 런타임에 /v3/api-docs와 /swagger-ui/index.html이 생긴다 — 검색 계약(파라미터·응답 record)이 코드에서 자동으로 나온다.
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.0")
 	compileOnly("org.projectlombok:lombok")
 	developmentOnly("org.springframework.boot:spring-boot-docker-compose")
 	runtimeOnly("org.postgresql:postgresql")

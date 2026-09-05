@@ -354,6 +354,27 @@ class StaySearchWireTest {
 		assertThat(mvc.perform(get("/actuator/env")).andReturn().getResponse().getStatus()).isEqualTo(404);   // API 키가 보이는 곳은 열지 않는다
 	}
 
+	// ── API 문서 (springdoc 3.x) — 계약이 코드에서 자동으로 나오는지 ────────
+
+	@Test
+	void openApiDocumentDescribesTheSearchContractFromTheCode() throws Exception {
+		MvcResult docs = mvc.perform(get("/v3/api-docs")).andReturn();
+		assertThat(docs.getResponse().getStatus()).isEqualTo(200);
+		JsonNode api = json.readTree(docs.getResponse().getContentAsString());
+		JsonNode search = api.path("paths").path("/api/v1/stays/search").path("get");
+		assertThat(search.isMissingNode()).isFalse();
+		assertThat(search.path("parameters")).extracting(p -> p.path("name").asString())
+				.containsExactlyInAnyOrder("checkIn", "checkOut", "adults", "children");
+		assertThat(search.path("parameters")).allSatisfy(p -> assertThat(p.path("required").asBoolean()).isTrue());
+		// 응답 record가 스키마로 잡힌다 — 포트 record가 아니라 응답 DTO(PriceResponse)가 계약이다
+		assertThat(api.path("components").path("schemas").has("SearchResponse")).isTrue();
+		assertThat(api.path("components").path("schemas").has("PriceResponse")).isTrue();
+		assertThat(api.path("paths").has("/admin/catalog/sync")).isTrue();
+		assertThat(api.path("paths").has("/actuator/health")).isFalse();   // 관리 지표 엔드포인트는 문서에 섞지 않는다
+
+		assertThat(mvc.perform(get("/swagger-ui/index.html")).andReturn().getResponse().getStatus()).isEqualTo(200);
+	}
+
 	private static SupplierOutcome supplier(SearchResponse response, String supplier) {
 		return response.suppliers().stream().filter(s -> s.supplier().equals(supplier)).findFirst().orElseThrow();
 	}

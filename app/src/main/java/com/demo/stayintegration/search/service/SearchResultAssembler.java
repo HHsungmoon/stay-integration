@@ -79,17 +79,22 @@ public class SearchResultAssembler {
 					calls++;
 					AvailabilityResult availability = success.value();
 					rejected += availability.rejected().size();
-					// 어댑터는 순수하게 두고 로그는 병합 지점 한 곳에서 남긴다
+					// 어댑터는 순수하게 두고 로그는 병합 지점 한 곳에서 남긴다.
+					// key-value를 함께 붙이는 이유: 컨테이너의 JSON 로그(ECS)에서 supplier·kind가 필드가 된다. 메시지의 값은 텍스트 콘솔용이다.
 					for (NormalizationIssue issue : availability.rejected()) {
-						log.warn("search: supplier {} rejected item {}/{} — {}", supplierId, issue.hotelCode(), issue.roomTypeCode(), issue.reason());
+						log.atWarn().addKeyValue("supplier", supplierId.value()).addKeyValue("event", "item_rejected")
+								.addKeyValue("hotelCode", issue.hotelCode()).addKeyValue("roomTypeCode", issue.roomTypeCode())
+								.log("search: supplier {} rejected item {}/{} — {}", supplierId, issue.hotelCode(), issue.roomTypeCode(), issue.reason());
 					}
 					for (Offer offer : availability.offers()) {
 						Optional<RoomTypeRef> reference = lookup.find(supplierId, offer.hotelCode(), offer.roomTypeCode());
 						if (reference.isEmpty()) {
 							// D-10: 해당 항목만 제외. 0이 아니면 동기화가 밀렸다는 신호 — 관리 엔드포인트로 동기화를 다시 돌리면 사라진다
 							unmapped++;
-							log.warn("search: supplier {} returned unmapped item {}/{} — catalog sync may be stale",
-									supplierId, offer.hotelCode(), offer.roomTypeCode());
+							log.atWarn().addKeyValue("supplier", supplierId.value()).addKeyValue("event", "item_unmapped")
+									.addKeyValue("hotelCode", offer.hotelCode()).addKeyValue("roomTypeCode", offer.roomTypeCode())
+									.log("search: supplier {} returned unmapped item {}/{} — catalog sync may be stale",
+											supplierId, offer.hotelCode(), offer.roomTypeCode());
 							continue;
 						}
 						offers++;
@@ -102,7 +107,10 @@ public class SearchResultAssembler {
 					if (firstFailure == null) {
 						firstFailure = new FailureInfo(failure.kind().name(), failure.kind().retryable(), failure.detail());
 					}
-					log.warn("search: supplier {} call failed ({}: {}) after {}ms", supplierId, failure.kind(), failure.detail(), failure.elapsed().toMillis());
+					log.atWarn().addKeyValue("supplier", supplierId.value()).addKeyValue("event", "call_failed")
+							.addKeyValue("kind", failure.kind().name()).addKeyValue("retryable", failure.kind().retryable())
+							.addKeyValue("elapsedMs", failure.elapsed().toMillis())
+							.log("search: supplier {} call failed ({}: {}) after {}ms", supplierId, failure.kind(), failure.detail(), failure.elapsed().toMillis());
 				}
 				case SupplierResult.Skipped<AvailabilityResult> skipped -> {
 					skippedCalls++;
@@ -131,8 +139,10 @@ public class SearchResultAssembler {
 		// D-11: 이름·수용 인원은 재고·요금 응답(②) 값이 요청 시점 기준 최신이다. 카탈로그 스냅샷과 다르면 기록만 한다.
 		if (!reference.propertyName().equals(offer.hotelName()) || !reference.roomTypeName().equals(offer.roomTypeName())
 				|| reference.maxOccupancy() != offer.maxOccupancy()) {
-			log.info("search: supplier {} item {}/{} differs from catalog snapshot — using availability values",
-					supplierId, offer.hotelCode(), offer.roomTypeCode());
+			log.atInfo().addKeyValue("supplier", supplierId.value()).addKeyValue("event", "snapshot_differs")
+					.addKeyValue("hotelCode", offer.hotelCode()).addKeyValue("roomTypeCode", offer.roomTypeCode())
+					.log("search: supplier {} item {}/{} differs from catalog snapshot — using availability values",
+							supplierId, offer.hotelCode(), offer.roomTypeCode());
 		}
 		return new StayItem(reference.propertyId(), offer.hotelName(), reference.roomTypeId(), offer.roomTypeName(), offer.maxOccupancy(),
 				offer.availableRooms(), offer.availableRooms() > 0, supplierId.value(),

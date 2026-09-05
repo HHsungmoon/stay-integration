@@ -103,17 +103,21 @@ public class CatalogSyncService {
 							catalogMappingSynchronizer.synchronize(success.supplier(), success.value(), now));
 				} catch (RuntimeException e) {
 					// 한 공급사의 저장 실패가 다른 공급사 동기화를 막지 않는다(D-8). 기존 매핑은 롤백으로 그대로다.
-					log.warn("catalog sync: persisting supplier {} failed — keeping existing mappings", success.supplier(), e);
+					log.atWarn().addKeyValue("supplier", success.supplier().value()).addKeyValue("event", "sync_persist_failed")
+							.setCause(e).log("catalog sync: persisting supplier {} failed — keeping existing mappings", success.supplier());
 					yield SupplierSyncResult.failed(success.supplier(), "PERSISTENCE", e.getMessage());
 				}
 			}
 			case SupplierResult.Failure<List<CatalogProperty>> failure -> {
-				log.warn("catalog sync: supplier {} failed ({}: {}) — keeping existing mappings",
-						failure.supplier(), failure.kind(), failure.detail());
+				log.atWarn().addKeyValue("supplier", failure.supplier().value()).addKeyValue("event", "sync_call_failed")
+						.addKeyValue("kind", failure.kind().name()).addKeyValue("retryable", failure.kind().retryable())
+						.log("catalog sync: supplier {} failed ({}: {}) — keeping existing mappings",
+								failure.supplier(), failure.kind(), failure.detail());
 				yield SupplierSyncResult.failed(failure.supplier(), failure.kind(), failure.detail());
 			}
 			case SupplierResult.Skipped<List<CatalogProperty>> skipped -> {
-				log.warn("catalog sync: supplier {} skipped ({}) — keeping existing mappings", skipped.supplier(), skipped.reason());
+				log.atWarn().addKeyValue("supplier", skipped.supplier().value()).addKeyValue("event", "sync_skipped")
+						.log("catalog sync: supplier {} skipped ({}) — keeping existing mappings", skipped.supplier(), skipped.reason());
 				yield SupplierSyncResult.skipped(skipped.supplier(), skipped.reason());
 			}
 		};

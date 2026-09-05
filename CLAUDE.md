@@ -215,6 +215,7 @@ GET /api/v1/stays/search?checkIn=2026-09-01&checkOut=2026-09-04&adults=2&childre
 - **기록은 `common.SupplierCallMetrics` 한 곳**, 호출은 병합 지점 둘(검색 service의 map · 동기화 루프). 응답에 실린 사실과 지표가 같은 순회에서 나온다.
   어댑터 파이프라인에서 기록하지 않는다 — 50개 사전 거절·데드라인 보정·fetcher 안전망의 결과를 보지 못한다
 - Actuator `health`·`metrics`만 노출(`env`는 API 키가 보인다). Prometheus는 스크레이퍼가 생길 때 설정 두 줄. 확인 방법은 README
+- 로그: 병합 지점의 경고는 `supplier`·`event`·`kind`를 **key-value로도** 붙인다(SLF4J fluent API). 컨테이너만 ECS JSON(compose 환경 변수), 로컬은 텍스트
 - 태그 카디널리티 주의: 공급사 이름은 안전하지만 숙소 코드·`detail`·`reason`처럼 무한히 늘어나는 값을 태그로 쓰지 않는다
 
 ### 실패 분류 — `FailureKind` (재시도 정책과 관측성 태그의 기반)

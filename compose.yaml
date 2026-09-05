@@ -47,6 +47,9 @@ services:
       # 컨테이너 안에서 localhost는 자기 자신이다 — 공급사 주소를 서비스 이름으로 덮는다
       SUPPLIER_ENDPOINTS_A_BASE_URL: http://mock-supplier:9090
       SUPPLIER_ENDPOINTS_B_BASE_URL: http://mock-supplier:9090
+      # 컨테이너 로그만 JSON(ECS). 로컬 bootRun은 사람이 읽는 텍스트 그대로 — 수집기가 있는 자리에서만 JSON이 의미가 있다
+      LOGGING_STRUCTURED_FORMAT_CONSOLE: ecs
+      LOGGING_STRUCTURED_ECS_SERVICE_NAME: stay-integration
     depends_on:
       postgres:
         condition: service_healthy

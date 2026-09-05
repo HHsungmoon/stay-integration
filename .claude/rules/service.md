@@ -29,4 +29,7 @@ paths:
 - `SKIPPED`(호출하지 않음)는 성공에도 실패에도 세지 않는다. 전부 SKIPPED면 `OK` + 빈 items.
 - 관측성 지표는 **service의 병합 지점**에서 `common.SupplierCallMetrics`에 `SupplierResult`를 넘겨 기록한다(검색은 `.map` 안, 동기화는 결과 루프).
   assembler는 순수 함수로 남긴다 — 레지스트리를 주입하면 단위 테스트가 레지스트리를 알아야 한다. 태그 이름은 service가 모른다.
+- 공급사·실패 종류가 들어가는 로그는 **값을 메시지에 쓰고 key-value로도 붙인다** — `log.atWarn().addKeyValue("supplier", id.value()).addKeyValue("kind", kind.name()).log(...)`.
+  컨테이너의 JSON 로그(ECS)에서 필드가 되고, 텍스트 콘솔(기본 패턴은 key-value를 찍지 않는다)에서는 메시지가 정보를 든다. 필드 이름은 지표 태그와 같게(`supplier`·`kind`).
+  공급사 API 키·본문 전체는 로그에 남기지 않는다.
 - `search`·`catalog`는 `supplier.adapter..`에 의존하지 않는다 — **포트만 안다.** 어댑터는 레지스트리로 주입된다.

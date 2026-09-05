@@ -26,8 +26,10 @@ public class SupplierCallPipelines {
 		this.circuitBreakerRegistry = CircuitBreakerRegistry.of(circuitBreakerConfig(supplierProperties.circuit()));
 		// 전이만 남긴다 — 호출마다 찍지 않는다. 전이는 드물고 그 순간이 사고 조사의 시작점이다.
 		circuitBreakerRegistry.getEventPublisher().onEntryAdded(added -> added.getAddedEntry().getEventPublisher()
-				.onStateTransition(event -> log.info("circuit breaker {}: {} -> {}", event.getCircuitBreakerName(),
-						event.getStateTransition().getFromState(), event.getStateTransition().getToState())));
+				.onStateTransition(event -> log.atInfo().addKeyValue("supplier", event.getCircuitBreakerName()).addKeyValue("event", "circuit_transition")
+						.addKeyValue("from", event.getStateTransition().getFromState().name()).addKeyValue("to", event.getStateTransition().getToState().name())
+						.log("circuit breaker {}: {} -> {}", event.getCircuitBreakerName(),
+								event.getStateTransition().getFromState(), event.getStateTransition().getToState())));
 	}
 
 	public SupplierCallPipeline forSupplier(SupplierId supplierId) {

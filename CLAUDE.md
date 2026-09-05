@@ -103,6 +103,10 @@ Base package `com.demo.stayintegration`.
 - `search` — 통합 검색 오케스트레이션. controller·service·응답 DTO
 - `common` — 여러 곳이 공유하는 타입만(설정·예외 처리·관측성). 특정 계층 전용은 넣지 않는다
 
+**feature 패키지 안은 레이어 서브패키지로 나눈다** — `controller` / `service` / `repository` / `entity` /
+`dto/request` / `dto/response`. 읽기 모델처럼 HTTP 요청·응답이 아닌 전달 객체는 `dto` 루트에 둔다.
+설정(`*Properties`)은 feature 루트. 경계 4·5를 ArchUnit이 패키지로 표현할 수 있고, `.claude/rules`의 `paths`가 정확히 걸린다.
+
 **경계** (`ArchitectureTest`(ArchUnit)가 빌드에서 강제)
 
 1. **공급사 전용 DTO는 자기 어댑터 패키지 밖으로 나가지 않는다.**

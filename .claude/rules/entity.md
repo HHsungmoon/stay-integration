@@ -1,7 +1,6 @@
 ---
 paths:
   - "app/src/main/java/**/entity/**/*.java"
-  - "app/src/main/java/**/catalog/**/*.java"
 ---
 
 # 엔티티 작성 규칙

@@ -29,15 +29,19 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 
 import com.demo.stayintegration.TestcontainersConfiguration;
 import com.demo.stayintegration.catalog.dto.response.SyncReport.SupplierSyncResult;
 import com.demo.stayintegration.catalog.dto.response.SyncReport.SupplierSyncResult.Status;
+import com.demo.stayintegration.supplier.port.AvailabilityQuery;
+import com.demo.stayintegration.supplier.port.AvailabilityResult;
 import com.demo.stayintegration.supplier.port.CatalogProperty;
 import com.demo.stayintegration.supplier.port.CatalogRoomType;
 import com.demo.stayintegration.supplier.port.FailureKind;
 import com.demo.stayintegration.supplier.port.SupplierAdapter;
 import com.demo.stayintegration.supplier.port.SupplierId;
+import com.demo.stayintegration.supplier.port.SupplierRegistry;
 import com.demo.stayintegration.supplier.port.SupplierResult;
 
 import reactor.core.publisher.Mono;
@@ -52,6 +56,12 @@ class CatalogSyncServiceTest {
 	static class StubAdapters {
 		@Bean StubAdapter supplierA() { return new StubAdapter("A"); }
 		@Bean StubAdapter supplierB() { return new StubAdapter("B"); }
+
+		// 실제 어댑터(a·b)도 컴포넌트 스캔으로 빈이 되어 있다. 이 테스트는 catalog의 책임만 보므로
+		// stub만 담은 레지스트리로 갈아 끼운다 — 실제 어댑터가 localhost:9090에 연결 실패하는 것은 여기서 볼 일이 아니다.
+		@Bean @Primary SupplierRegistry stubOnlyRegistry(StubAdapter supplierA, StubAdapter supplierB) {
+			return new SupplierRegistry(List.of(supplierA, supplierB));
+		}
 	}
 
 	static class StubAdapter implements SupplierAdapter {
@@ -67,6 +77,11 @@ class CatalogSyncServiceTest {
 		public Mono<SupplierResult<List<CatalogProperty>>> fetchCatalog() {
 			Mono<SupplierResult<List<CatalogProperty>>> mono = Mono.fromSupplier(next);
 			return delay.isZero() ? mono : mono.delayElement(delay);
+		}
+
+		@Override
+		public Mono<SupplierResult<AvailabilityResult>> fetchAvailability(AvailabilityQuery query) {
+			return Mono.error(new UnsupportedOperationException("catalog tests do not query availability"));
 		}
 
 		void returns(CatalogProperty... properties) {

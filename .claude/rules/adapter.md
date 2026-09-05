@@ -34,6 +34,9 @@ HTTP 상태로 실패를 알리는 공급사와 **항상 200을 주고 본문 �
 실패 분류는 `FailureKind` 8값(CLAUDE.md 표) — `TIMEOUT` `CONNECTION_FAILED` `SERVER_ERROR` `RATE_LIMITED`는 재시도 가능,
 `UNAUTHORIZED` `BAD_REQUEST` `UNEXPECTED` `NORMALIZATION_FAILED`는 불가. **모르는 코드는 `UNEXPECTED`** — 재시도하지 않는다.
 
+**항목 단위 결함은 격리한다.** `fetchAvailability`는 `SupplierResult<AvailabilityResult>`를 돌려주고, 음수 요금·통화 누락·날짜 형식 오류 같은
+항목 결함은 `rejected`에 넣고 나머지 상품은 `offers`로 살린다. 응답 전체가 못 쓸 때(파싱 불가·봉투 이상·`resultCode` 실패)만 `Failure`.
+
 `SupplierResult`에 소요시간을 담아 둔다 — 관측성 지표가 여기서 파생된다.
 
 ## 호출

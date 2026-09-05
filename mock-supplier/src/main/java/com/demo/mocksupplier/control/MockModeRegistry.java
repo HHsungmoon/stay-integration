@@ -1,4 +1,4 @@
-package com.test.mocksupplier.control;
+package com.demo.mocksupplier.control;
 
 import java.util.Map;
 import java.util.Set;

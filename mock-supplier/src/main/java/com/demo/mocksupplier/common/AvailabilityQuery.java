@@ -1,4 +1,4 @@
-package com.test.mocksupplier.common;
+package com.demo.mocksupplier.common;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;

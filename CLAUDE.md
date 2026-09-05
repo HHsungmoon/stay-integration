@@ -92,7 +92,7 @@
 
 축은 레이어나 feature가 아니라 **"공급사 형식이 도메인으로 새지 않는 경계"**다.
 
-Base package `com.test.stayintegration`.
+Base package `com.demo.stayintegration`.
 
 - `supplier` — 공통 포트와 결과 타입. **도메인이 아는 유일한 공급사 표현.**
   - `supplier.port` — `SupplierAdapter` 인터페이스(숙소 목록 조회 / 재고·요금 조회), 표준 모델, `SupplierResult`

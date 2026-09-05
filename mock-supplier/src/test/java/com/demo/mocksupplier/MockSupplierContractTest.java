@@ -1,4 +1,4 @@
-package com.test.mocksupplier;
+package com.demo.mocksupplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

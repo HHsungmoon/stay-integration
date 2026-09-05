@@ -1,4 +1,4 @@
-package com.test.mocksupplier.control;
+package com.demo.mocksupplier.control;
 
 import java.util.Map;
 
@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.test.mocksupplier.common.MockProperties;
+import com.demo.mocksupplier.common.MockProperties;
 
 @RestController
 @RequestMapping("/control")

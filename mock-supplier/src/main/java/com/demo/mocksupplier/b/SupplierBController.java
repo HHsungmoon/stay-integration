@@ -1,4 +1,4 @@
-package com.test.mocksupplier.b;
+package com.demo.mocksupplier.b;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,18 +11,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.async.DeferredResult;
 
-import com.test.mocksupplier.b.SupplierBResponse.Envelope;
-import com.test.mocksupplier.b.SupplierBResponse.Inventory;
-import com.test.mocksupplier.b.SupplierBResponse.Item;
-import com.test.mocksupplier.b.SupplierBResponse.Properties;
-import com.test.mocksupplier.b.SupplierBResponse.Property;
-import com.test.mocksupplier.b.SupplierBResponse.Room;
-import com.test.mocksupplier.b.SupplierBResponse.Search;
-import com.test.mocksupplier.catalog.MockCatalog;
-import com.test.mocksupplier.common.AvailabilityQuery;
-import com.test.mocksupplier.common.MockProperties;
-import com.test.mocksupplier.common.RequestError;
-import com.test.mocksupplier.common.ResponseGate;
+import com.demo.mocksupplier.b.SupplierBResponse.Envelope;
+import com.demo.mocksupplier.b.SupplierBResponse.Inventory;
+import com.demo.mocksupplier.b.SupplierBResponse.Item;
+import com.demo.mocksupplier.b.SupplierBResponse.Properties;
+import com.demo.mocksupplier.b.SupplierBResponse.Property;
+import com.demo.mocksupplier.b.SupplierBResponse.Room;
+import com.demo.mocksupplier.b.SupplierBResponse.Search;
+import com.demo.mocksupplier.catalog.MockCatalog;
+import com.demo.mocksupplier.common.AvailabilityQuery;
+import com.demo.mocksupplier.common.MockProperties;
+import com.demo.mocksupplier.common.RequestError;
+import com.demo.mocksupplier.common.ResponseGate;
 
 @RestController
 @RequestMapping("/b/api")

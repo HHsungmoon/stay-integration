@@ -1,4 +1,4 @@
-package com.test.mocksupplier.common;
+package com.demo.mocksupplier.common;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -10,7 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.async.DeferredResult;
 
-import com.test.mocksupplier.control.MockModeRegistry;
+import com.demo.mocksupplier.control.MockModeRegistry;
 
 @Component
 public class ResponseGate implements DisposableBean {

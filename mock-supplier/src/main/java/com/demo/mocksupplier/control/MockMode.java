@@ -1,4 +1,4 @@
-package com.test.mocksupplier.control;
+package com.demo.mocksupplier.control;
 
 public enum MockMode {
 	NORMAL, ERROR, NO_RESPONSE, DELAY;

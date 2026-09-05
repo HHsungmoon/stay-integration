@@ -1,4 +1,4 @@
-package com.test.stayintegration;
+package com.demo.stayintegration;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

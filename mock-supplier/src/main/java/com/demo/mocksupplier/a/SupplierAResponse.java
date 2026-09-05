@@ -1,4 +1,4 @@
-package com.test.mocksupplier.a;
+package com.demo.mocksupplier.a;
 
 import java.time.LocalDate;
 import java.util.List;

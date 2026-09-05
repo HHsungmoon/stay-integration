@@ -1,4 +1,4 @@
-package com.test.mocksupplier.a;
+package com.demo.mocksupplier.a;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,18 +12,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.async.DeferredResult;
 
-import com.test.mocksupplier.a.SupplierAResponse.Availability;
-import com.test.mocksupplier.a.SupplierAResponse.DailyRate;
-import com.test.mocksupplier.a.SupplierAResponse.Error;
-import com.test.mocksupplier.a.SupplierAResponse.Hotel;
-import com.test.mocksupplier.a.SupplierAResponse.Hotels;
-import com.test.mocksupplier.a.SupplierAResponse.Item;
-import com.test.mocksupplier.a.SupplierAResponse.RoomType;
-import com.test.mocksupplier.catalog.MockCatalog;
-import com.test.mocksupplier.common.AvailabilityQuery;
-import com.test.mocksupplier.common.MockProperties;
-import com.test.mocksupplier.common.RequestError;
-import com.test.mocksupplier.common.ResponseGate;
+import com.demo.mocksupplier.a.SupplierAResponse.Availability;
+import com.demo.mocksupplier.a.SupplierAResponse.DailyRate;
+import com.demo.mocksupplier.a.SupplierAResponse.Error;
+import com.demo.mocksupplier.a.SupplierAResponse.Hotel;
+import com.demo.mocksupplier.a.SupplierAResponse.Hotels;
+import com.demo.mocksupplier.a.SupplierAResponse.Item;
+import com.demo.mocksupplier.a.SupplierAResponse.RoomType;
+import com.demo.mocksupplier.catalog.MockCatalog;
+import com.demo.mocksupplier.common.AvailabilityQuery;
+import com.demo.mocksupplier.common.MockProperties;
+import com.demo.mocksupplier.common.RequestError;
+import com.demo.mocksupplier.common.ResponseGate;
 
 @RestController
 @RequestMapping("/a/v1")

@@ -1,4 +1,4 @@
-package com.test.mocksupplier.common;
+package com.demo.mocksupplier.common;
 
 import java.util.Map;
 

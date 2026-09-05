@@ -1,4 +1,4 @@
-package com.test.mocksupplier;
+package com.demo.mocksupplier;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

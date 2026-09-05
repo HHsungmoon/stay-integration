@@ -1,4 +1,4 @@
-package com.test.mocksupplier.catalog;
+package com.demo.mocksupplier.catalog;
 
 import java.util.List;
 import java.util.Optional;

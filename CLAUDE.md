@@ -101,8 +101,10 @@ Base package `com.demo.stayintegration`.
 - `supplier` — 공통 포트와 결과 타입. **도메인이 아는 유일한 공급사 표현.**
   - `supplier.port` — `SupplierAdapter` 인터페이스(숙소 목록 조회 / 재고·요금 조회), 표준 모델, `SupplierResult<T>`.
     `SupplierId`는 enum이 아니라 **String 값 객체** — enum이면 "신규 공급사 추가 시 고칠 것" 목록이 거짓이 된다.
-  - `supplier.adapter.<name>` — 공급사별 어댑터 + **그 공급사 전용 DTO.**
-    WebClient 호출 → 역직렬화 → 실패 판정 → 표준 모델 변환을 **이 안에서 전부 끝낸다.**
+  - `supplier.normalization` — A·B가 공유하는 **순수 함수**(연박 재고 판정 `InventoryRule`). 포트는 계약만, 로직은 여기
+  - `supplier.adapter.support` — 어댑터끼리 공유하는 인프라(설정·WebClient 생성·실패 분류·호출 골격). 도메인은 이걸 모른다
+  - `supplier.adapter.<name>` — 공급사별 어댑터 + normalizer + **그 공급사 전용 DTO.**
+    WebClient 호출 → 역직렬화 → 실패 판정 → 표준 모델 변환을 **이 안에서 전부 끝낸다.** 어댑터는 예외를 던지지 않는다.
 - `catalog` — 공급사 코드 ↔ 내부 식별자 매핑. 엔티티·repository·동기화 service
 - `search` — 통합 검색 오케스트레이션. controller·service·응답 DTO
 - `common` — 여러 곳이 공유하는 타입만(설정·예외 처리·관측성). 특정 계층 전용은 넣지 않는다

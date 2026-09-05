@@ -23,3 +23,20 @@ catalog:
   sync-on-startup: true
   # 공급사별 응답 타임아웃(2s)보다 길고, 검색 데드라인(D-7 3s)과 같은 값
   sync-deadline: 3s
+
+supplier:
+  endpoints:
+    # 키가 곧 SupplierId다. 어댑터는 기동 시 자기 항목을 찾고 없으면 기동에 실패한다(fail-fast).
+    # Docker Compose에서는 SUPPLIER_ENDPOINTS_A_BASE_URL=http://mock-supplier:9090 으로 덮는다 — 컨테이너 안에서 localhost는 자기 자신이다.
+    a:
+      base-url: http://localhost:9090
+      api-key: mock-key-a
+      # 같은 네트워크 대역의 정상 연결은 수십 ms. 이 이상 기다리는 것은 회복이 아니라 대기다(D-7)
+      connect-timeout: 500ms
+      # 검색 전체 목표 3s에서 병합·직렬화 여유를 뺀 값(D-7)
+      response-timeout: 2s
+    b:
+      base-url: http://localhost:9090
+      api-key: mock-key-b
+      connect-timeout: 500ms
+      response-timeout: 2s

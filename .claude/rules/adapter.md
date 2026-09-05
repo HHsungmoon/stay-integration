@@ -42,11 +42,20 @@ HTTP 상태로 실패를 알리는 공급사와 **항상 200을 주고 본문 �
 ## 호출
 
 - **WebClient만 쓴다.** `RestClient`·`RestTemplate` 금지.
-- 타임아웃 3계층을 어댑터가 소유한다: 연결 **500ms** / 응답 **2s**.
+- **`retrieve()`가 아니라 `exchangeToMono()`.** `retrieve()`는 4xx/5xx를 예외로 바꿔 에러 본문을 detail에 담기 번거롭고,
+  항상 200을 주는 공급사에는 아무것도 걸러주지 않는다. 상태와 본문을 한 곳에서 보고 직접 판정한다.
+- 타임아웃 두 계층을 어댑터가 소유한다: 연결 **500ms**(Netty `CONNECT_TIMEOUT_MILLIS`) / 응답 **2s**.
+  응답은 **Netty `responseTimeout` + Reactor `.timeout()` 두 겹** — 전자는 헤더까지, 후자가 느린 본문을 잡는다.
   오케스트레이션 데드라인 **3s**는 병합 쪽(`search`)에 건다.
-- 값은 YAML 설정으로 빼고 **공급사 단위로** 준다. 근거를 주석으로 남긴다.
-- 재고·요금 조회는 **한 번에 최대 50개** 숙소 코드. 초과하면 공급사가 오류를 준다.
-- 인증은 `X-Api-Key` 헤더.
+- 값은 `supplier.endpoints.<id>`에서 **공급사 단위로** 읽는다. 항목이 없으면 기동 실패(fail-fast).
+- 재고·요금 조회는 **한 번에 최대 50개**. 초과하면 **호출 없이** `Failure(BAD_REQUEST)` — 뻔히 실패할 호출을 보내지 않는다.
+- 인증은 `X-Api-Key` 헤더. 키도 공급사 단위 설정.
+- `elapsed`는 성공·실패 모두 담는다 — 관측성 지표가 여기서 파생된다.
+- 호출 골격은 `support.SupplierCallPipeline`(공급사 단위 인스턴스)이 소유한다 — 소요시간 측정, Reactor 타임아웃, 빈 응답 방어, 예외 → `Failure` 강등.
+  어댑터는 `exchangeToMono` 안에서 상태·본문을 보고 `CallOutcome`(Ok/Failed)만 만든다. elapsed는 파이프라인이 마지막에 찍는다.
+- **서킷 브레이커(7단계)는 어댑터 파이프라인의 맨 바깥에 들어간다.** 열렸을 때 `Skipped`를 돌려주는 것은 "이 공급사 호출의 결과"라 어댑터가 표현한다.
+- 공급사 DTO는 **날짜를 `String`, 금액을 boxed(`Long`)로** 받는다. `LocalDate`로 받으면 항목 하나의 날짜 오류가 본문 전체 파싱 실패가 되고,
+  primitive면 누락이 0으로 둔갑한다. 파싱·누락 판정은 normalizer가 항목 단위로 한다.
 
 ## 정규화는 순수 함수로 유지한다
 

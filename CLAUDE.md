@@ -103,16 +103,21 @@ Base package `com.demo.stayintegration`.
 - `search` — 통합 검색 오케스트레이션. controller·service·응답 DTO
 - `common` — 여러 곳이 공유하는 타입만(설정·예외 처리·관측성). 특정 계층 전용은 넣지 않는다
 
-**feature 패키지 안은 레이어 서브패키지로 나눈다** — `controller` / `service` / `repository` / `entity` /
+**feature 패키지 안은 레이어 서브패키지로 나눈다** — `controller` / `service` / `function` / `repository` / `entity` /
 `dto/request` / `dto/response`. 읽기 모델처럼 HTTP 요청·응답이 아닌 전달 객체는 `dto` 루트에 둔다.
 설정(`*Properties`)은 feature 루트. 경계 4·5를 ArchUnit이 패키지로 표현할 수 있고, `.claude/rules`의 `paths`가 정확히 걸린다.
+
+**`function`** — repository 접근을 모으는 계층. 서비스는 repository를 직접 부르지 않고 function만 안다.
+서비스끼리 서로의 데이터가 필요할 때 상대 서비스를 주입하는 대신 function을 쓰므로 **순환 참조가 구조적으로 막힌다.**
+순수 위임(findById를 그대로 넘기기만)은 두지 않는다 — 조립·변환이 있을 때만 메서드를 만든다. 트랜잭션은 열지 않는다(service가 연다).
 
 **경계** (`ArchitectureTest`(ArchUnit)가 빌드에서 강제)
 
 1. **공급사 전용 DTO는 자기 어댑터 패키지 밖으로 나가지 않는다.**
 2. **`search`·`catalog`는 `supplier.adapter..`에 의존하지 않는다** — 포트만 안다. 어댑터는 레지스트리로 주입된다.
 3. **`supplier..`는 JPA 영속성 API·repository에 의존하지 않는다** — 어댑터와 정규화는 DB를 모른다.
-4. `controller → service → repository` 단방향. controller가 repository를 직접 호출하지 않는다.
+4. `controller → service → function → repository` 단방향. **repository는 function에서만 호출한다.**
+   controller·service가 repository를 직접 잡으면 위반이다.
 5. **`@Entity`는 controller 경계를 넘지 않는다** — 요청·응답은 DTO. 매핑은 service.
 
 **신규 공급사 추가 시 고치는 것**: 어댑터 구현체 1개 + 설정(엔드포인트·키·타임아웃) + 레지스트리 등록.
@@ -279,6 +284,7 @@ Mock은 **코드 품질을 보지 않는다.** 시간을 쓰지 않는다.
 | 파일 | 적용 대상 | 담은 것 |
 |---|---|---|
 | `entity.md` | 엔티티 · `catalog` | Lombok 제약, **유니크 제약 선언**, soft delete |
+| `function.md` | `function/` | **repository 접근은 여기서만**, 순수 위임 금지, 트랜잭션 없음 |
 | `repository.md` | `*Repository` | JPA 접근 경계, upsert 멱등성, N+1 회피 |
 | `service.md` | `*Service` | 트랜잭션 경계, **리액티브 체인에서 JPA 금지**, 병합·지표 |
 | `controller.md` | `*Controller` | **검색 API 계약**, 요청 검증, 응답 상태, `.block()` 위치 |

@@ -8,7 +8,10 @@ paths:
 
 - `@Service @RequiredArgsConstructor @Transactional(readOnly = true)`.
   **쓰기 메서드에만** `@Transactional`을 붙여 readOnly를 해제한다.
-- `@Transactional` 경계는 **service 계층에만** 둔다.
+- `@Transactional` 경계는 **service 계층에만** 둔다. function은 자기 트랜잭션을 열지 않고 여기 참여한다.
+- **repository를 직접 주입하지 않는다.** 데이터 접근은 `function`(`*Reader` / `*Store`)을 통한다.
+  다른 서비스의 데이터가 필요해도 그 서비스를 주입하지 않는다 — function을 쓴다. 순환 참조가 생길 길이 없어진다.
+- 변수명은 축약하지 않는다. `service`·`repo`·`roomTypes`가 아니라 `catalogSyncService`·`roomTypeMappingRepository`.
 - **생성자 주입만** — 필드 주입 금지.
 - 엔티티 ↔ DTO 매핑은 여기서 한다.
 

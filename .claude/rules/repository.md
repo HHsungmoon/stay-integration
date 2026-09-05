@@ -8,6 +8,7 @@ paths:
 
 - `interface XRepository extends JpaRepository<E, Id>`.
 - **repository만 JPA 영속성 API에 접근한다.** service·controller는 영속성 API를 직접 쓰지 않는다.
+- **repository를 호출하는 것은 `function` 계층만이다.** service가 repository를 주입받으면 경계 4 위반.
 - 단건 조회는 `Optional<T>`.
 - 동기화는 **upsert로 멱등**하게. 여러 번 돌려도 내부 식별자가 바뀌지 않아야 하고, 이것을 테스트로 증명한다.
 

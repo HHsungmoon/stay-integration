@@ -18,3 +18,8 @@ spring:
 server:
   port: 8080
 
+catalog:
+  # 기동 시 1회 동기화(D-8). 실패해도 앱은 뜨고 기존 매핑으로 서비스한다.
+  sync-on-startup: true
+  # 공급사별 응답 타임아웃(2s)보다 길고, 검색 데드라인(D-7 3s)과 같은 값
+  sync-deadline: 3s

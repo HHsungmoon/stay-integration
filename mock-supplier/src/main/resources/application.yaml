@@ -4,3 +4,10 @@ spring:
 
 server:
   port: 9090
+
+mock:
+  api-key:
+    a: mock-key-a
+    b: mock-key-b
+  # 응답 타임아웃(2s)을 확실히 넘기는 값. delay 모드에서 delayMs를 안 주면 이걸 쓴다.
+  delay-default-ms: 3000

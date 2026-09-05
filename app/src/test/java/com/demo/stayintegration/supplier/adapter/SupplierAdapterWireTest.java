@@ -19,6 +19,7 @@ import com.demo.mocksupplier.control.MockMode;
 import com.demo.stayintegration.MockSupplierServer;
 import com.demo.stayintegration.supplier.adapter.a.SupplierAAdapter;
 import com.demo.stayintegration.supplier.adapter.b.SupplierBAdapter;
+import com.demo.stayintegration.supplier.adapter.support.SupplierCallPipelines;
 import com.demo.stayintegration.supplier.adapter.support.SupplierProperties;
 import com.demo.stayintegration.supplier.adapter.support.SupplierProperties.Endpoint;
 import com.demo.stayintegration.supplier.adapter.support.SupplierWebClients;
@@ -50,8 +51,9 @@ class SupplierAdapterWireTest {
 		mock = MockSupplierServer.start();
 		SupplierProperties properties = properties(mock.baseUrl(), "mock-key-a", "mock-key-b");
 		SupplierWebClients webClients = new SupplierWebClients(WebClient.builder(), properties);
-		adapterA = new SupplierAAdapter(webClients, properties);
-		adapterB = new SupplierBAdapter(webClients, properties);
+		SupplierCallPipelines pipelines = new SupplierCallPipelines(properties);
+		adapterA = new SupplierAAdapter(webClients, pipelines);
+		adapterB = new SupplierBAdapter(webClients, pipelines);
 	}
 
 	@AfterEach
@@ -142,7 +144,7 @@ class SupplierAdapterWireTest {
 	@Test
 	void nothingListeningIsConnectionFailed() throws IOException {
 		SupplierProperties closedPort = properties("http://localhost:" + freePort(), "mock-key-a", "mock-key-b");
-		SupplierAAdapter unreachable = new SupplierAAdapter(new SupplierWebClients(WebClient.builder(), closedPort), closedPort);
+		SupplierAAdapter unreachable = new SupplierAAdapter(new SupplierWebClients(WebClient.builder(), closedPort), new SupplierCallPipelines(closedPort));
 
 		Failure<List<CatalogProperty>> failure = failure(unreachable.fetchCatalog().block(Duration.ofSeconds(5)));
 
@@ -155,8 +157,8 @@ class SupplierAdapterWireTest {
 		SupplierProperties wrongKeys = properties(mock.baseUrl(), "nope", "nope");
 		SupplierWebClients webClients = new SupplierWebClients(WebClient.builder(), wrongKeys);
 
-		Failure<List<CatalogProperty>> a = failure(new SupplierAAdapter(webClients, wrongKeys).fetchCatalog().block());
-		Failure<List<CatalogProperty>> b = failure(new SupplierBAdapter(webClients, wrongKeys).fetchCatalog().block());
+		Failure<List<CatalogProperty>> a = failure(new SupplierAAdapter(webClients, new SupplierCallPipelines(wrongKeys)).fetchCatalog().block());
+		Failure<List<CatalogProperty>> b = failure(new SupplierBAdapter(webClients, new SupplierCallPipelines(wrongKeys)).fetchCatalog().block());
 
 		assertThat(a.kind()).isEqualTo(FailureKind.UNAUTHORIZED);   // HTTP 401
 		assertThat(a.detail()).startsWith("HTTP 401 UNAUTHORIZED");
@@ -169,7 +171,7 @@ class SupplierAdapterWireTest {
 	static SupplierProperties properties(String baseUrl, String keyA, String keyB) {
 		return new SupplierProperties(Map.of(
 				"a", new Endpoint(baseUrl, keyA, Duration.ofMillis(500), RESPONSE_TIMEOUT),
-				"b", new Endpoint(baseUrl, keyB, Duration.ofMillis(500), RESPONSE_TIMEOUT)));
+				"b", new Endpoint(baseUrl, keyB, Duration.ofMillis(500), RESPONSE_TIMEOUT)), StubExchange.CIRCUIT_THAT_NEVER_OPENS);
 	}
 
 	static int freePort() throws IOException {

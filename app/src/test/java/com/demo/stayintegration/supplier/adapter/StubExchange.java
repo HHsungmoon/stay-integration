@@ -13,7 +13,9 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import com.demo.stayintegration.supplier.adapter.support.SupplierCallPipelines;
 import com.demo.stayintegration.supplier.adapter.support.SupplierProperties;
+import com.demo.stayintegration.supplier.adapter.support.SupplierProperties.Circuit;
 import com.demo.stayintegration.supplier.adapter.support.SupplierProperties.Endpoint;
 import com.demo.stayintegration.supplier.adapter.support.SupplierWebClients;
 
@@ -72,7 +74,18 @@ public final class StubExchange implements ExchangeFunction {
 		return new SupplierWebClients(WebClient.builder().exchangeFunction(this), properties);
 	}
 
+	public SupplierCallPipelines pipelines(String supplierId, String apiKey) {
+		return new SupplierCallPipelines(properties(supplierId, apiKey));
+	}
+
+	// 어댑터 테스트가 서킷을 모르게 하는 설정 — 창이 커서 한 테스트 안에서는 열리지 않는다. 서킷 자체는 SupplierCircuitBreakerTest가 작은 창으로 본다.
+	public static final Circuit CIRCUIT_THAT_NEVER_OPENS = new Circuit(1_000, 1_000, 50f, Duration.ofSeconds(10), 3);
+
 	public static SupplierProperties properties(String supplierId, String apiKey) {
-		return new SupplierProperties(Map.of(supplierId, new Endpoint(BASE_URL, apiKey, Duration.ofMillis(100), RESPONSE_TIMEOUT)));
+		return properties(supplierId, apiKey, CIRCUIT_THAT_NEVER_OPENS);
+	}
+
+	public static SupplierProperties properties(String supplierId, String apiKey, Circuit circuit) {
+		return new SupplierProperties(Map.of(supplierId, new Endpoint(BASE_URL, apiKey, Duration.ofMillis(100), RESPONSE_TIMEOUT)), circuit);
 	}
 }

@@ -16,7 +16,7 @@ import com.demo.stayintegration.supplier.adapter.b.SupplierBResponse.Search;
 import com.demo.stayintegration.supplier.adapter.support.CallOutcome;
 import com.demo.stayintegration.supplier.adapter.support.FailureClassifier;
 import com.demo.stayintegration.supplier.adapter.support.SupplierCallPipeline;
-import com.demo.stayintegration.supplier.adapter.support.SupplierProperties;
+import com.demo.stayintegration.supplier.adapter.support.SupplierCallPipelines;
 import com.demo.stayintegration.supplier.adapter.support.SupplierWebClients;
 import com.demo.stayintegration.supplier.port.AvailabilityQuery;
 import com.demo.stayintegration.supplier.port.AvailabilityResult;
@@ -45,9 +45,9 @@ public class SupplierBAdapter implements SupplierAdapter {
 	private final SupplierCallPipeline pipeline;
 	private final SupplierBNormalizer normalizer = new SupplierBNormalizer();
 
-	public SupplierBAdapter(SupplierWebClients supplierWebClients, SupplierProperties supplierProperties) {
+	public SupplierBAdapter(SupplierWebClients supplierWebClients, SupplierCallPipelines supplierCallPipelines) {
 		this.webClient = supplierWebClients.forSupplier(ID);
-		this.pipeline = new SupplierCallPipeline(ID, supplierProperties.endpointOf(ID).responseTimeout());
+		this.pipeline = supplierCallPipelines.forSupplier(ID);
 	}
 
 	@Override

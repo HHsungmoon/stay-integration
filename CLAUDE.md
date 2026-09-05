@@ -45,7 +45,9 @@
 - **Resilience4j 2.3.0 — 코어 모듈만** (`resilience4j-circuitbreaker` · `-reactor` · `-micrometer`).
   Boot 4 BOM이 관리하지 않으므로 버전을 직접 지정한다. **`resilience4j-spring-boot3` 스타터는 쓰지 않는다** —
   Boot 3 자동설정에 묶여 있고, 어노테이션 마법 대신 Reactor 체인에 명시적으로 붙이는 편이 동작이 드러난다.
-  서킷은 **공급사별로** 따로 둔다. 열려서 호출하지 않은 경우는 `SupplierResult.Skipped`.
+  서킷은 **공급사별로** 따로 둔다(카탈로그·재고 공유). 열려서 호출하지 않은 경우는 `SupplierResult.Skipped`.
+  **어댑터가 실패를 값으로 돌려주므로 `recordResult` 술어가 없으면 서킷은 영원히 열리지 않는다** — 기록 기준은 `FailureKind.retryable()`.
+  `-micrometer`는 `MeterRegistry`가 생기는 관측성 단계에서 함께 넣는다.
 - **그 외 부가 라이브러리는 Boot 4 호환을 먼저 확인한다**(springdoc 등). 의존성 해결이 30분 내에
   안 되면 도입하지 않고, 해당 기능은 직접 구현하거나 설계 문서로 남긴다. 그 판단을 JOURNAL에 기록한다.
 - API 문서(springdoc-openapi **3.x** — 2.x는 Boot 3용)는 선택. 핵심 흐름이 끝난 뒤에 검토한다.
@@ -227,6 +229,7 @@ GET /api/v1/stays/search?checkIn=2026-09-01&checkOut=2026-09-04&adults=2&childre
 | `NORMALIZATION_FAILED` | X | 응답 전체를 표준 모델로 못 바꿈 | 동일 | — |
 
 **모르는 것은 재시도하지 않는다.** 재시도 예산은 데드라인 안에 갇혀 있어, 이해하지 못하는 실패에 쓰면 이해하는 실패를 재시도할 기회를 잃는다.
+**서킷이 실패로 세는 것도 같은 술어다** — 우리 버그(`BAD_REQUEST`)나 모르는 실패로 정상 공급사를 끊지 않고, 401을 서킷 뒤에 숨겨 원인을 지우지 않는다.
 항목 하나의 결함(음수 요금·통화 누락)은 `Failure`가 아니라 `AvailabilityResult.rejected`로 격리한다 — 그 공급사의 다른 상품은 살린다.
 
 ---

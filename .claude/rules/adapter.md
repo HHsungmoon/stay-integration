@@ -53,7 +53,11 @@ HTTP 상태로 실패를 알리는 공급사와 **항상 200을 주고 본문 �
 - `elapsed`는 성공·실패 모두 담는다 — 관측성 지표가 여기서 파생된다.
 - 호출 골격은 `support.SupplierCallPipeline`(공급사 단위 인스턴스)이 소유한다 — 소요시간 측정, Reactor 타임아웃, 빈 응답 방어, 예외 → `Failure` 강등.
   어댑터는 `exchangeToMono` 안에서 상태·본문을 보고 `CallOutcome`(Ok/Failed)만 만든다. elapsed는 파이프라인이 마지막에 찍는다.
-- **서킷 브레이커(7단계)는 어댑터 파이프라인의 맨 바깥에 들어간다.** 열렸을 때 `Skipped`를 돌려주는 것은 "이 공급사 호출의 결과"라 어댑터가 표현한다.
+- **서킷 브레이커는 어댑터 파이프라인의 맨 바깥에 있다.** 열렸을 때 `Skipped("circuit open")`을 돌려주는 것은 "이 공급사 호출의 결과"라 어댑터가 표현한다.
+  파이프라인은 어댑터가 직접 만들지 않고 `support.SupplierCallPipelines.forSupplier(id)`에서 받는다 — 타임아웃·서킷 조립이 한 곳이고 신규 공급사가 서킷을 자동으로 얻는다.
+  서킷은 **공급사당 하나**(카탈로그·재고 공유). **어댑터가 실패를 값으로 돌려주므로 `CircuitBreakerConfig.recordResult` 술어가 반드시 있어야 한다** —
+  없으면 모든 `Failure`가 성공으로 기록되어 서킷이 영원히 열리지 않고, 그 사실이 조용하다. 기록 기준은 `FailureKind.retryable()`(재시도 판단과 같은 질문).
+  50개 초과 사전 거절은 파이프라인 밖이라 서킷 통계에 들어가지 않는다.
 - 공급사 DTO는 **날짜를 `String`, 금액을 boxed(`Long`)로** 받는다. `LocalDate`로 받으면 항목 하나의 날짜 오류가 본문 전체 파싱 실패가 되고,
   primitive면 누락이 0으로 둔갑한다. 파싱·누락 판정은 normalizer가 항목 단위로 한다.
 

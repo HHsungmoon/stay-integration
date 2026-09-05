@@ -28,6 +28,10 @@ dependencies {
 	developmentOnly("org.springframework.boot:spring-boot-docker-compose")
 	runtimeOnly("org.postgresql:postgresql")
 	annotationProcessor("org.projectlombok:lombok")
+	// 서킷 브레이커. Boot 4 BOM이 관리하지 않아 버전을 직접 적는다. spring-boot3 스타터는 Boot 3 자동설정에 묶여 있어 쓰지 않는다 —
+	// 체인에 명시적으로 붙이는 편이 동작이 드러난다. -micrometer는 MeterRegistry가 생기는 8단계에 함께 넣는다.
+	implementation("io.github.resilience4j:resilience4j-circuitbreaker:2.3.0")
+	implementation("io.github.resilience4j:resilience4j-reactor:2.3.0")
 	testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
 	testImplementation("org.springframework.boot:spring-boot-starter-validation-test")
 	testImplementation("org.springframework.boot:spring-boot-starter-webclient-test")

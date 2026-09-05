@@ -40,7 +40,7 @@ class SupplierAAdapterTest {
 	@BeforeEach
 	void setUp() {
 		exchange = new StubExchange();
-		adapter = new SupplierAAdapter(exchange.webClients("a", "mock-key-a"), StubExchange.properties("a", "mock-key-a"));
+		adapter = new SupplierAAdapter(exchange.webClients("a", "mock-key-a"), exchange.pipelines("a", "mock-key-a"));
 	}
 
 	@Test

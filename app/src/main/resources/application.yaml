@@ -40,6 +40,17 @@ supplier:
       api-key: mock-key-b
       connect-timeout: 500ms
       response-timeout: 2s
+  # 서킷 브레이커 — 공급사 공통, 인스턴스는 공급사별. 이미 아는 실패에 매 검색마다 2초를 태우지 않기 위한 장치(07)
+  circuit:
+    # 호출 수 기준 창. 검색 1건 = 공급사당 청크 1호출이므로 최소 10은 "여러 번의 검색"이지 한 번의 사고가 아니다
+    sliding-window-size: 20
+    minimum-number-of-calls: 10
+    # 절반이 실패하는 공급사는 이미 검색 품질을 망친다. 더 높이면 열릴 때쯤엔 사용자가 다 겪은 뒤다
+    failure-rate-threshold: 50
+    # 검색 데드라인 3s의 3배 이상. 짧으면 죽은 공급사를 계속 두드리고, 길면 복구를 늦게 알아챈다
+    wait-duration-in-open-state: 10s
+    # 1이면 우연한 실패 한 번에 다시 10초 닫힌다. 3이면 3호출의 실패율로 판정한다(1건 실패는 닫힘, 2건이면 다시 열림)
+    permitted-number-of-calls-in-half-open-state: 3
 
 search:
   # 공급사 계약 상한. 어댑터가 51개를 거절하므로 이 값이 틀리면 테스트가 바로 잡는다

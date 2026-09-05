@@ -38,6 +38,9 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-testcontainers")
 	testImplementation("org.testcontainers:testcontainers-junit-jupiter")
 	testImplementation("org.testcontainers:testcontainers-postgresql")
+	// 어댑터의 타임아웃·연결 거부·본문 코드 판정은 스텁이 아니라 실제 와이어로 검증해야 한다.
+	// Mock 모듈을 같은 JVM의 두 번째 컨텍스트로 띄운다 — base package가 달라 스캔이 겹치지 않고, 포트·톰캣이 따로다.
+	testImplementation(project(":mock-supplier"))
 	testCompileOnly("org.projectlombok:lombok")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 	testAnnotationProcessor("org.projectlombok:lombok")

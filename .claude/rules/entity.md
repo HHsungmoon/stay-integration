@@ -34,6 +34,12 @@ Hibernate는 이 선언을 보고 제약을 만든다. **애노테이션에 없�
 객실 타입 코드는 **숙소 안에서만 유일**하므로 숙소 코드가 키에 반드시 포함된다.
 이것이 "같은 공급사 상품은 항상 같은 내부 식별자"라는 불변 조건의 **실제 강제 지점**이다.
 
+`RoomTypeMapping`의 `supplier`·`supplier_hotel_code`는 소속 `PropertyMapping`의 값을 **생성자에서 복사**하고
+이후 바꾸지 않는다(setter 없음). 복사하는 이유: 검색 lookup이 join 없이 단일 테이블로 끝나고, DDL이 스펙의
+식별자 규칙("세 값이 필요하다")을 그대로 말한다. 불일치 경로가 없으므로 정규화 위반을 감수한다.
+
+`supplier` 컬럼은 `varchar`다. `SupplierId`가 enum이 아니라 String 값 객체이기 때문이다(CLAUDE.md Architecture).
+
 ## 하드 삭제하지 않는다
 
 공급사 목록에서 사라진 상품은 `active` 플래그로 비활성화한다.

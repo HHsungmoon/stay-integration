@@ -6,6 +6,15 @@ spring:
       # compose.yaml은 저장소 루트에 있고 bootRun의 작업 디렉토리는 app/ 이므로
       # 한 단계 위를 가리킨다. (developmentOnly 의존성이라 jar 실행에는 영향 없음)
       file: ../compose.yaml
+  jpa:
+    hibernate:
+      # Flyway를 쓰지 않는다 — 테이블 2개 규모에서 마이그레이션 이력이 산출물이 아니다. 근거는 README.
+      # 주의: update는 기존 테이블의 제약을 바꾸지 않는다. 로컬(compose, 볼륨 없음)과 테스트(Testcontainers)는
+      # 매번 새 DB라 문제없지만, 실운영이라면 Flyway + validate가 맞다.
+      ddl-auto: update
+    # 트랜잭션 경계는 service에만 둔다. 세션을 컨트롤러까지 끌고 가면 경계가 흐려진다.
+    open-in-view: false
 
 server:
   port: 8080
+

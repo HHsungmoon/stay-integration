@@ -199,13 +199,13 @@ class CatalogSyncServiceTest {
 		catalogSyncService.sync();
 		Map<String, Long> aBefore = propertyIdsOf("A");
 
-		supplierA.fails(FailureKind.TRANSIENT, "503 SERVICE_UNAVAILABLE");
+		supplierA.fails(FailureKind.SERVER_ERROR, "HTTP 503 SERVICE_UNAVAILABLE");
 		supplierB.returns(B_RIVERSIDE, property("B99999", "New Property", room("R-1", "Room", 2)));
 		SyncReport report = catalogSyncService.sync();
 
 		SupplierSyncResult a = result(report, "A");
 		assertThat(a.status()).isEqualTo(Status.FAILED);
-		assertThat(a.failure().kind()).isEqualTo("TRANSIENT");
+		assertThat(a.failure().kind()).isEqualTo("SERVER_ERROR");
 		assertThat(a.failure().detail()).contains("503");
 		assertThat(propertyIdsOf("A")).isEqualTo(aBefore);                       // A는 그대로
 		assertThat(propertyMappingRepository.findAllBySupplier("A")).allMatch(PropertyMapping::isActive);

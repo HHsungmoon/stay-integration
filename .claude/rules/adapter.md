@@ -31,8 +31,8 @@ paths:
 HTTP 상태로 실패를 알리는 공급사와 **항상 200을 주고 본문 코드로만 알리는 공급사**가
 같은 실패 값으로 번역되기 때문이다. 본문 코드를 확인하지 않으면 장애가 "빈 결과"로 둔갑한다.
 
-실패 분류: **일시적**(타임아웃·5xx·일시 장애·호출 한도 초과) / **영구적**(인증 실패·잘못된 요청·코드 50개 초과) /
-**정규화 실패**(응답은 왔으나 변환 불가).
+실패 분류는 `FailureKind` 8값(CLAUDE.md 표) — `TIMEOUT` `CONNECTION_FAILED` `SERVER_ERROR` `RATE_LIMITED`는 재시도 가능,
+`UNAUTHORIZED` `BAD_REQUEST` `UNEXPECTED` `NORMALIZATION_FAILED`는 불가. **모르는 코드는 `UNEXPECTED`** — 재시도하지 않는다.
 
 `SupplierResult`에 소요시간을 담아 둔다 — 관측성 지표가 여기서 파생된다.
 

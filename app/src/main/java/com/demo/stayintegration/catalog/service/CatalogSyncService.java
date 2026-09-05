@@ -116,11 +116,11 @@ public class CatalogSyncService {
 	}
 
 	private static SupplierResult<List<CatalogProperty>> deadlineExceeded(SupplierId supplierId, Duration deadline) {
-		return new SupplierResult.Failure<>(supplierId, FailureKind.TRANSIENT, "catalog fetch exceeded " + deadline, deadline);
+		return new SupplierResult.Failure<>(supplierId, FailureKind.TIMEOUT, "catalog fetch exceeded " + deadline, deadline);
 	}
 
 	private static SupplierResult<List<CatalogProperty>> unexpected(SupplierId supplierId, Throwable e) {
-		return new SupplierResult.Failure<>(supplierId, FailureKind.TRANSIENT,
+		return new SupplierResult.Failure<>(supplierId, FailureKind.UNEXPECTED,
 				"adapter threw " + e.getClass().getSimpleName() + ": " + e.getMessage(), Duration.ZERO);
 	}
 }

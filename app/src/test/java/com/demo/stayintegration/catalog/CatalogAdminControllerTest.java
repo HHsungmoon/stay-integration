@@ -38,7 +38,7 @@ class CatalogAdminControllerTest {
 	void syncReturnsReportAsIs() throws Exception {
 		when(catalogSyncService.sync()).thenReturn(new SyncReport(Instant.parse("2026-10-01T09:00:00Z"), 412, List.of(
 				new SupplierSyncResult("A", Status.SUCCESS, new SyncOutcome(4, 0, 0, 0), null),
-				new SupplierSyncResult("B", Status.FAILED, null, new SupplierSyncResult.FailureInfo("TRANSIENT", "timeout")))));
+				new SupplierSyncResult("B", Status.FAILED, null, new SupplierSyncResult.FailureInfo("TIMEOUT", "catalog fetch exceeded PT3S")))));
 
 		MvcResult res = mvc.perform(post("/admin/catalog/sync")).andReturn();
 
@@ -50,7 +50,7 @@ class CatalogAdminControllerTest {
 		assertThat(body.path("suppliers").get(0).path("supplier").asString()).isEqualTo("A");
 		assertThat(body.path("suppliers").get(0).path("outcome").path("created").asInt()).isEqualTo(4);
 		assertThat(body.path("suppliers").get(1).path("status").asString()).isEqualTo("FAILED");
-		assertThat(body.path("suppliers").get(1).path("failure").path("kind").asString()).isEqualTo("TRANSIENT");
+		assertThat(body.path("suppliers").get(1).path("failure").path("kind").asString()).isEqualTo("TIMEOUT");
 	}
 
 	@Test

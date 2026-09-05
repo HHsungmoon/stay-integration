@@ -1,3 +1,7 @@
+# 두 가지로 쓰인다.
+#  1) ./gradlew :app:bootRun — Spring Boot Docker Compose Support가 이 파일에서 프로파일 없는 서비스(postgres)만 띄운다
+#  2) docker compose --profile stack up --build — postgres + mock-supplier + app 전부. 로컬에 JDK가 없어도 된다
+# app·mock에 프로파일을 단 이유: 안 달면 bootRun이 컨테이너 app까지 띄워 8080을 먼저 잡는다.
 services:
   postgres:
     image: 'postgres:18-alpine'
@@ -7,3 +11,45 @@ services:
       - 'POSTGRES_USER=myuser'
     ports:
       - '5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U myuser -d mydatabase']
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  mock-supplier:
+    profiles: [stack]
+    build:
+      context: .
+      dockerfile: mock-supplier/Dockerfile
+    ports:
+      - '${MOCK_PORT:-9090}:9090'
+    healthcheck:
+      # JRE 이미지에 curl이 없다. bash의 /dev/tcp로 포트가 열렸는지만 본다
+      test: ['CMD-SHELL', "bash -c 'exec 3<>/dev/tcp/127.0.0.1/9090' || exit 1"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
+  app:
+    profiles: [stack]
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    ports:
+      # 호스트 8080이 이미 쓰이고 있으면 APP_PORT=18080 docker compose --profile stack up 처럼 덮는다. 컨테이너 안은 항상 8080
+      - '${APP_PORT:-8080}:8080'
+    environment:
+      # spring-boot-docker-compose는 developmentOnly라 이미지에 없다 — 접속 정보를 직접 준다
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/mydatabase
+      SPRING_DATASOURCE_USERNAME: myuser
+      SPRING_DATASOURCE_PASSWORD: secret
+      # 컨테이너 안에서 localhost는 자기 자신이다 — 공급사 주소를 서비스 이름으로 덮는다
+      SUPPLIER_ENDPOINTS_A_BASE_URL: http://mock-supplier:9090
+      SUPPLIER_ENDPOINTS_B_BASE_URL: http://mock-supplier:9090
+    depends_on:
+      postgres:
+        condition: service_healthy
+      # 기동 시 카탈로그 동기화가 성공하도록 Mock을 기다린다. 없어도 앱은 뜬다(D-8) — 그때는 POST /admin/catalog/sync로 채운다
+      mock-supplier:
+        condition: service_healthy

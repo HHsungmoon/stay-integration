@@ -1,0 +1,8 @@
+# 빌드 컨텍스트에 보내지 않는 것. docs/는 외부 원문 자료를 포함하므로 이미지 근처에도 가지 않는다.
+.git
+.gradle
+.idea
+build
+**/build
+docs
+*.md

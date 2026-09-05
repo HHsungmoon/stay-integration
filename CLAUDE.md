@@ -358,6 +358,8 @@ Mock은 **코드 품질을 보지 않는다.** 시간을 쓰지 않는다.
 - 전제: **Docker Desktop 실행 중.** PostgreSQL은 Spring Boot Docker Compose Support가 `bootRun` 시
   자동 기동하고(`compose.yaml`은 저장소 루트), 통합 테스트는 Testcontainers가 별도로 띄운다.
 - 본체: `./gradlew :app:bootRun` (8080) · Mock 공급사: `./gradlew :mock-supplier:bootRun` (9090)
+- 전부 컨테이너로: `docker compose --profile stack up --build` (호스트 8080이 바쁘면 `APP_PORT=18080`). app·mock은 `stack` 프로파일 뒤에 있다 —
+  안 그러면 `bootRun`의 Compose Support가 컨테이너 app까지 띄워 8080을 먼저 잡는다. `.dockerignore`가 `docs/`를 빌드 컨텍스트에서 제외한다.
 - **둘 다 띄워야 검색이 동작한다.** Mock 서버 없이 검색을 호출하면 전 공급사 연결 실패가 되고,
   이는 정상 동작(`ALL_FAILED`)이지 버그가 아니다.
 - 빌드·테스트: `./gradlew build`

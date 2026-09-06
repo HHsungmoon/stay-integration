@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # git commit 전에 저장소 정책 위반을 검사한다.
 #
-# 저장소 정책 위반(외부 원문 자료 커밋, 금지 표현 노출)은 히스토리에 남으면
+# 저장소 정책 위반(외부 자료 커밋, 금지 표현 노출)은 히스토리에 남으면
 # 되돌릴 수 없고, 히스토리 자체가 산출물이라 rewrite로 지우기도 곤란하다.
 # 사람이 매번 눈으로 확인하는 대신 여기서 막는다.
 set -uo pipefail
@@ -26,7 +26,7 @@ add_note() { notes="${notes}  - ${1}"$'\n'; }
 #
 # 파일명을 직접 매칭하지 않는 이유: git은 한글 파일명을 이스케이프해 출력하고
 # (core.quotepath), macOS는 NFD/NFC 두 표현이 섞인다. .gitignore를 유일한 기준으로 삼으면
-# 그 문제를 피하면서 외부 원문 자료·작성 중 문서를 한 번에 커버한다.
+# 그 문제를 피하면서 외부 자료·작성 중 문서를 한 번에 커버한다.
 while IFS= read -r -d '' f; do
 	[ -z "$f" ] && continue
 	if git check-ignore -q --no-index -- "$f" 2>/dev/null; then

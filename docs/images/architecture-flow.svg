@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 480" width="1120" height="480" font-family='"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic","Helvetica Neue",Arial,sans-serif' role="img" aria-label="검색 요청과 카탈로그 동기화의 전체 흐름">
+<defs><marker id="fa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#3B3847"/></marker><marker id="fr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#5533B0"/></marker><marker id="fc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#2B4C7E"/></marker></defs>
+<rect x="0" y="0" width="1120" height="480" fill="#FFFFFF"/>
+<rect x="155" y="36" width="365" height="436" rx="12" fill="#E9F0FA" stroke="#2B4C7E" stroke-opacity="0.35" stroke-dasharray="4 4"/>
+<text x="166" y="462" text-anchor="start" font-size="12" font-weight="600" fill="#2B4C7E">톰캣 워커 · 기동 스레드 — JPA와 block()은 여기서만</text>
+<rect x="570" y="36" width="395" height="270" rx="12" fill="#F3EBFA" stroke="#5A2E86" stroke-opacity="0.35" stroke-dasharray="4 4"/>
+<text x="581" y="296" text-anchor="start" font-size="12" font-weight="600" fill="#5A2E86">Netty 이벤트 루프 — Mono 체인, 블로킹 금지</text>
+<rect x="970" y="36" width="145" height="270" rx="12" fill="#EFEDF4" stroke="#DDDAE5" stroke-dasharray="4 4"/>
+<text x="981" y="52" text-anchor="start" font-size="12" font-weight="600" fill="#6B6878">별도 프로세스</text>
+<text x="981" y="296" text-anchor="start" font-size="12" font-weight="600" fill="#6B6878">:mock-supplier 9090</text>
+<path d="M136 124 L168 124" fill="none" stroke="#3B3847" stroke-width="1.4" marker-end="url(#fa)"/>
+<path d="M170 146 L138 146" fill="none" stroke="#5533B0" stroke-width="1.4" marker-end="url(#fr)"/>
+<path d="M320 134 L348 134" fill="none" stroke="#3B3847" stroke-width="1.4" marker-end="url(#fa)"/>
+<path d="M425 164 L425 238" fill="none" stroke="#3B3847" stroke-width="1.4" marker-end="url(#fa)"/>
+<path d="M350 270 L322 270" fill="none" stroke="#3B3847" stroke-width="1.4" marker-end="url(#fa)"/>
+<path d="M500 134 L588 134" fill="none" stroke="#3B3847" stroke-width="1.4" marker-end="url(#fa)"/>
+<path d="M750 126 L768 126 L768 102 L788 102" fill="none" stroke="#3B3847" stroke-width="1.4" marker-end="url(#fa)"/>
+<path d="M750 142 L768 142 L768 186 L788 186" fill="none" stroke="#3B3847" stroke-width="1.4" marker-end="url(#fa)"/>
+<path d="M950 102 L983 102" fill="none" stroke="#3B3847" stroke-width="1.4" marker-end="url(#fa)"/>
+<path d="M950 186 L983 186" fill="none" stroke="#3B3847" stroke-width="1.4" marker-end="url(#fa)"/>
+<path d="M790 120 L778 120 L778 252" fill="none" stroke="#3B3847" stroke-width="1.4"/>
+<path d="M790 204 L778 204" fill="none" stroke="#3B3847" stroke-width="1.4"/>
+<path d="M778 252 L752 252" fill="none" stroke="#3B3847" stroke-width="1.4" marker-end="url(#fa)"/>
+<path d="M590 252 L552 252 L552 60 L245 60 L245 102" fill="none" stroke="#5533B0" stroke-width="1.4" marker-end="url(#fr)"/>
+<path d="M136 420 L348 420" fill="none" stroke="#2B4C7E" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#fc)"/>
+<path d="M500 420 L870 420 L870 220" fill="none" stroke="#2B4C7E" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#fc)"/>
+<path d="M425 390 L425 345 L245 345 L245 302" fill="none" stroke="#2B4C7E" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#fc)"/>
+<text x="146" y="116" font-size="16" font-weight="700" fill="#5533B0" stroke="#FFFFFF" stroke-width="4" paint-order="stroke" stroke-linejoin="round">①</text>
+<text x="146" y="164" font-size="16" font-weight="700" fill="#5533B0" stroke="#FFFFFF" stroke-width="4" paint-order="stroke" stroke-linejoin="round">⑨</text>
+<text x="327" y="126" font-size="16" font-weight="700" fill="#5533B0" stroke="#FFFFFF" stroke-width="4" paint-order="stroke" stroke-linejoin="round">②</text>
+<text x="432" y="205" font-size="16" font-weight="700" fill="#5533B0" stroke="#FFFFFF" stroke-width="4" paint-order="stroke" stroke-linejoin="round">③</text>
+<text x="537" y="126" font-size="16" font-weight="700" fill="#5533B0" stroke="#FFFFFF" stroke-width="4" paint-order="stroke" stroke-linejoin="round">④</text>
+<text x="752" y="166" font-size="16" font-weight="700" fill="#5533B0" stroke="#FFFFFF" stroke-width="4" paint-order="stroke" stroke-linejoin="round">⑤</text>
+<text x="959" y="94" font-size="16" font-weight="700" fill="#5533B0" stroke="#FFFFFF" stroke-width="4" paint-order="stroke" stroke-linejoin="round">⑥</text>
+<text x="959" y="178" font-size="16" font-weight="700" fill="#5533B0" stroke="#FFFFFF" stroke-width="4" paint-order="stroke" stroke-linejoin="round">⑥</text>
+<text x="758" y="272" font-size="16" font-weight="700" fill="#5533B0" stroke="#FFFFFF" stroke-width="4" paint-order="stroke" stroke-linejoin="round">⑦</text>
+<text x="394" y="54" font-size="16" font-weight="700" fill="#5533B0" stroke="#FFFFFF" stroke-width="4" paint-order="stroke" stroke-linejoin="round">⑧</text>
+<text x="236" y="412" font-size="16" font-weight="700" fill="#2B4C7E" stroke="#FFFFFF" stroke-width="4" paint-order="stroke" stroke-linejoin="round">ⓐ</text>
+<text x="680" y="412" font-size="16" font-weight="700" fill="#2B4C7E" stroke="#FFFFFF" stroke-width="4" paint-order="stroke" stroke-linejoin="round">ⓑ</text>
+<text x="330" y="338" font-size="16" font-weight="700" fill="#2B4C7E" stroke="#FFFFFF" stroke-width="4" paint-order="stroke" stroke-linejoin="round">ⓒ</text>
+<rect x="16" y="104" width="120" height="60" rx="8" fill="#FFFFFF" stroke="#C4BFD3" stroke-width="1.2"/>
+<text x="76.0" y="127" text-anchor="middle" font-size="13" font-weight="600" fill="#1B1A22">클라이언트</text>
+<text x="76.0" y="144" text-anchor="middle" font-size="11" font-weight="400" fill="#6B6878">검색 요청</text>
+<text x="76.0" y="158" text-anchor="middle" font-size="11" font-weight="400" fill="#6B6878">날짜 · 인원만</text>
+<rect x="170" y="104" width="150" height="60" rx="8" fill="#FFFFFF" stroke="#5533B0" stroke-width="1.6"/>
+<text x="245.0" y="127" text-anchor="middle" font-size="13" font-weight="600" fill="#1B1A22" textLength="134" lengthAdjust="spacingAndGlyphs">StaySearchController</text>
+<text x="245.0" y="144" text-anchor="middle" font-size="11" font-weight="400" fill="#6B6878">요청 검증</text>
+<text x="245.0" y="158" text-anchor="middle" font-size="11" font-weight="400" fill="#6B6878">block() 단 한 번</text>
+<rect x="350" y="104" width="150" height="60" rx="8" fill="#FFFFFF" stroke="#C4BFD3" stroke-width="1.2"/>
+<text x="425.0" y="127" text-anchor="middle" font-size="13" font-weight="600" fill="#1B1A22" textLength="134" lengthAdjust="spacingAndGlyphs">StaySearchService</text>
+<text x="425.0" y="144" text-anchor="middle" font-size="11" font-weight="400" fill="#6B6878">스냅샷 읽기</text>
+<text x="425.0" y="158" text-anchor="middle" font-size="11" font-weight="400" fill="#6B6878">→ 체인 조립</text>
+<rect x="590" y="104" width="160" height="60" rx="8" fill="#FFFFFF" stroke="#C4BFD3" stroke-width="1.2"/>
+<text x="670.0" y="127" text-anchor="middle" font-size="13" font-weight="600" fill="#1B1A22" textLength="144" lengthAdjust="spacingAndGlyphs">SupplierAvailabilityFetcher</text>
+<text x="670.0" y="144" text-anchor="middle" font-size="11" font-weight="400" fill="#6B6878">청크 50 · 동시 4</text>
+<text x="670.0" y="158" text-anchor="middle" font-size="11" font-weight="400" fill="#6B6878">데드라인 3s</text>
+<rect x="790" y="70" width="160" height="64" rx="8" fill="#FFFFFF" stroke="#C4BFD3" stroke-width="1.2"/>
+<text x="870.0" y="93" text-anchor="middle" font-size="13" font-weight="600" fill="#1B1A22">SupplierAAdapter</text>
+<text x="870.0" y="110" text-anchor="middle" font-size="11" font-weight="400" fill="#6B6878" textLength="146" lengthAdjust="spacingAndGlyphs">서킷 → HTTP → 판정 → 정규화</text>
+<text x="870.0" y="124" text-anchor="middle" font-size="11" font-weight="400" fill="#6B6878">실패는 HTTP 5xx로</text>
+<rect x="790" y="154" width="160" height="64" rx="8" fill="#FFFFFF" stroke="#C4BFD3" stroke-width="1.2"/>
+<text x="870.0" y="177" text-anchor="middle" font-size="13" font-weight="600" fill="#1B1A22">SupplierBAdapter</text>
+<text x="870.0" y="194" text-anchor="middle" font-size="11" font-weight="400" fill="#6B6878" textLength="146" lengthAdjust="spacingAndGlyphs">서킷 → HTTP → 판정 → 정규화</text>
+<text x="870.0" y="208" text-anchor="middle" font-size="11" font-weight="400" fill="#6B6878">200이어도 resultCode 판정</text>
+<rect x="985" y="72" width="118" height="60" rx="8" fill="#FFFFFF" stroke="#C4BFD3" stroke-width="1.2" stroke-dasharray="3 3"/>
+<text x="1044.0" y="95" text-anchor="middle" font-size="13" font-weight="600" fill="#1B1A22">Mock A</text>
+<text x="1044.0" y="115" text-anchor="middle" font-size="11" font-weight="400" fill="#6B6878">날짜별 단가 + 세금</text>
+<rect x="985" y="156" width="118" height="60" rx="8" fill="#FFFFFF" stroke="#C4BFD3" stroke-width="1.2" stroke-dasharray="3 3"/>
+<text x="1044.0" y="179" text-anchor="middle" font-size="13" font-weight="600" fill="#1B1A22">Mock B</text>
+<text x="1044.0" y="199" text-anchor="middle" font-size="11" font-weight="400" fill="#6B6878">총액 하나 · E503</text>
+<rect x="590" y="220" width="160" height="64" rx="8" fill="#FFFFFF" stroke="#5533B0" stroke-width="1.6"/>
+<text x="670.0" y="243" text-anchor="middle" font-size="13" font-weight="600" fill="#1B1A22">Assembler + Metrics</text>
+<text x="670.0" y="260" text-anchor="middle" font-size="11" font-weight="400" fill="#6B6878">병합 · ID 변환 · 상태 판정</text>
+<text x="670.0" y="274" text-anchor="middle" font-size="11" font-weight="400" fill="#6B6878">unmapped 격리 · 지표 기록</text>
+<rect x="350" y="240" width="150" height="60" rx="8" fill="#FFFFFF" stroke="#C4BFD3" stroke-width="1.2"/>
+<text x="425.0" y="263" text-anchor="middle" font-size="13" font-weight="600" fill="#1B1A22" textLength="134" lengthAdjust="spacingAndGlyphs">CatalogLookupReader</text>
+<text x="425.0" y="280" text-anchor="middle" font-size="11" font-weight="400" fill="#6B6878">활성 매핑 → Map</text>
+<text x="425.0" y="294" text-anchor="middle" font-size="11" font-weight="400" fill="#6B6878">JOIN FETCH 1쿼리</text>
+<rect x="170" y="240" width="150" height="60" rx="8" fill="#FFFFFF" stroke="#C4BFD3" stroke-width="1.2" stroke-dasharray="3 3"/>
+<text x="245.0" y="263" text-anchor="middle" font-size="13" font-weight="600" fill="#1B1A22">PostgreSQL</text>
+<text x="245.0" y="280" text-anchor="middle" font-size="11" font-weight="400" fill="#6B6878">property_mapping</text>
+<text x="245.0" y="294" text-anchor="middle" font-size="11" font-weight="400" fill="#6B6878">room_type_mapping</text>
+<rect x="16" y="390" width="120" height="60" rx="8" fill="#FFFFFF" stroke="#C4BFD3" stroke-width="1.2"/>
+<text x="76.0" y="413" text-anchor="middle" font-size="13" font-weight="600" fill="#1B1A22">트리거</text>
+<text x="76.0" y="430" text-anchor="middle" font-size="11" font-weight="400" fill="#6B6878">기동 1회</text>
+<text x="76.0" y="444" text-anchor="middle" font-size="11" font-weight="400" fill="#6B6878">관리 엔드포인트</text>
+<rect x="350" y="390" width="150" height="60" rx="8" fill="#FFFFFF" stroke="#C4BFD3" stroke-width="1.2"/>
+<text x="425.0" y="413" text-anchor="middle" font-size="13" font-weight="600" fill="#1B1A22" textLength="134" lengthAdjust="spacingAndGlyphs">CatalogSyncService</text>
+<text x="425.0" y="430" text-anchor="middle" font-size="11" font-weight="400" fill="#6B6878">병렬 fetch → block</text>
+<text x="425.0" y="444" text-anchor="middle" font-size="11" font-weight="400" fill="#6B6878">공급사별 diff 저장</text>
+</svg>
